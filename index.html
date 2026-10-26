@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<meta name="description" content="모아 - 체험용 모의 송금 시뮬레이터. 실제 돈은 이동하지 않습니다.">
-<title>모아 송금 · 체험용</title>
+<meta name="description" content="모아 송금">
+<title>모아 송금</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -54,7 +54,6 @@ svg{display:block}
 .icon-btn:active{background:rgba(2,32,71,.05);transform:scale(.94)}
 .icon-btn svg{width:24px;height:24px}
 .icon-btn.sm svg{width:20px;height:20px}
-.demo-chip{flex:none;font-size:11px;font-weight:700;color:var(--primary-strong);background:var(--primary-weak);padding:3px 7px;border-radius:6px;white-space:nowrap;letter-spacing:-.01em}
 .text-btn{font-size:15px;font-weight:600;color:var(--text-2);padding:8px 10px;border-radius:10px}
 .text-btn:active{background:var(--fill)}
 .text-btn.blue{color:var(--primary)}
@@ -332,7 +331,7 @@ svg{display:block}
 <script>
 'use strict';
 /* =========================================================
- * 모아 (MOA) — 체험용 모바일 금융 앱 시뮬레이터
+ * 모아 (MOA) — 모바일 앱
  * 실제 은행/금융 서비스와 연결되지 않으며, 모든 데이터는 이 기기의 LocalStorage에만 저장됩니다.
  * 네트워크 요청을 보내는 코드는 없습니다(글꼴 CSS 제외).
  * ========================================================= */
@@ -448,7 +447,7 @@ const BANKS = [
   { id: 'savings', name: '저축은행', short: '저축', color: '#6B7684', alias: ['저축'] },
   { id: 'etc', name: '기타 금융기관', short: '기타', color: '#8B95A1', alias: ['기타', '증권', '금융'] },
 ];
-const OWN_BANK = { id: 'moa', name: '모아 가상은행', short: 'M', color: '#3182F6' };
+const OWN_BANK = { id: 'moa', name: '모아은행', short: 'M', color: '#3182F6' };
 const bankById = id => BANKS.find(b => b.id === id) || (id === 'moa' ? OWN_BANK : null);
 function bankIc(b, size = '') {
   if (!b) return `<span class="bank-ic empty ${size}">${ICON.bank}</span>`;
@@ -692,7 +691,7 @@ function lockNav(ms = ANIM + 30) { navLock = true; clearTimeout(lockNav.t); lock
 function appbar({ title = '', back = true, close = false, right = '' } = {}) {
   return `<header class="appbar">
     ${back ? `<button class="icon-btn" data-act="back" aria-label="뒤로 가기">${ICON.back}</button>` : close ? `<button class="icon-btn" data-act="closeFlow" aria-label="닫기">${ICON.close}</button>` : '<span style="width:12px"></span>'}
-    <div class="title">${title}</div>${right}<span class="demo-chip">체험용</span><span style="width:8px"></span>
+    <div class="title">${title}</div>${right}<span style="width:8px"></span>
   </header>`;
 }
 function buildScreen(name, params = {}) {
@@ -780,7 +779,7 @@ function recipientRow(r, showMore = true) {
     <div class="lr-main">
       <div class="lr-title">${esc(r.name)}</div>
       <div class="lr-sub">${esc(b ? b.name : '')} ${maskAccount(r.account)}</div>
-      <div class="lr-sub2">${fmtRelDay(r.lastAt)} ${fmtTime(r.lastAt)} 모의 송금${r.count > 1 ? ` · ${r.count}회` : ''}</div>
+      <div class="lr-sub2">${fmtRelDay(r.lastAt)} ${fmtTime(r.lastAt)} 송금${r.count > 1 ? ` · ${r.count}회` : ''}</div>
     </div>
     <button class="icon-btn sm star-btn ${r.favorite ? 'on' : ''}" data-act="toggleFav" data-key="${esc(r.key)}" aria-label="${r.favorite ? '즐겨찾기 해제' : '즐겨찾기 등록'}">${ICON.star}</button>
     ${showMore ? `<button class="icon-btn sm" style="color:#B0B8C1" data-act="recipMore" data-key="${esc(r.key)}" aria-label="더보기">${ICON.more}</button>` : ''}
@@ -792,13 +791,8 @@ function recipientLists() {
   return `
   ${favs.length ? `<div class="ls"><div class="ls-title">${ICON.star.replace('<svg', '<svg style="width:15px;height:15px;color:#FFC342;fill:#FFC342"')}즐겨찾기</div>${favs.map(r => recipientRow(r)).join('')}</div>` : ''}
   <div class="ls"><div class="ls-title">최근 보낸 계좌</div>
-    ${recents.length ? recents.map(r => recipientRow(r)).join('') : `<div class="empty-state"><div class="ei">${ICON.send}</div><b>최근 보낸 계좌가 없어요</b>모의 송금을 완료하면 여기에 보여드릴게요</div>`}
+    ${recents.length ? recents.map(r => recipientRow(r)).join('') : `<div class="empty-state"><div class="ei">${ICON.send}</div><b>최근 보낸 계좌가 없어요</b>송금을 완료하면 여기에 보여드릴게요</div>`}
   </div>`;
-}
-/* ---------- 워터마크 ---------- */
-function watermarkUrl() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140"><text x="10" y="80" transform="rotate(-20 110 70)" font-family="sans-serif" font-size="13" font-weight="700" fill="rgba(49,130,246,0.07)">모의 송금 · 실제 이체 아님</text></svg>`;
-  return `url('data:image/svg+xml,${encodeURIComponent(svg)}')`;
 }
 /* ---------- 스택 화면 정의 ---------- */
 const SCREENS = {
@@ -835,9 +829,9 @@ const SCREENS = {
             <button class="name-btn" data-act="openName" id="nameBtn">${ICON.edit}${t.recipientName ? '이름 수정' : '받는 사람 이름 입력'}</button>
           </div>
         </div>
-        <p class="hint">계좌번호와 이름은 실제 은행에 조회하거나 확인하지 않아요.</p>
+        
         ${recipientLists()}` : `
-        <div class="empty-state" style="padding-top:56px"><div class="ei">${ICON.people}</div><b>연락처 송금은 체험판에서 지원하지 않아요</b>개인정보 보호를 위해 연락처에 접근하지 않아요.<br>계좌번호로 모의 송금을 체험해보세요.
+        <div class="empty-state" style="padding-top:56px"><div class="ei">${ICON.people}</div><b>연락처 송금은 지원하지 않아요</b>개인정보 보호를 위해 연락처에 접근하지 않아요.<br>계좌번호로 보내주세요.
           <div style="margin-top:20px"><button class="btn btn-secondary btn-sm" data-act="recipMode" data-mode="account">계좌로 보내기</button></div></div>`}
         <div style="height:24px"></div>
       </div>
@@ -901,11 +895,11 @@ const SCREENS = {
   /* STEP 8 처리 중 */
   processing: {
     white: true, noBack: true, status: 'processing',
-    onBackBlocked() { toast('모의 송금을 처리하는 중이에요. 잠시만 기다려주세요'); },
+    onBackBlocked() { toast('송금을 처리하는 중이에요. 잠시만 기다려주세요'); },
     render(e) {
       const t = appState.transfer, bank = bankById(t.recipientBank), acc = getAccount(t.sourceAccountId);
       const arc = 'M50 100 Q150 4 250 100';
-      return `<header class="appbar"><span class="spacer"></span><span class="demo-chip">체험용</span><span style="width:8px"></span></header>
+      return `<header class="appbar"><span class="spacer"></span><span style="width:8px"></span></header>
       <div class="proc-wrap">
         <div class="send-stage" id="sendStage">
           <svg class="send-svg" viewBox="0 0 300 150" aria-hidden="true">
@@ -922,8 +916,8 @@ const SCREENS = {
         </div>
         <div class="send-amount num" id="sendAmount">0원</div>
         <div class="proc-title" id="procTitle"><b>${esc(t.recipientName)}</b>님께 보내는 중</div>
-        <div class="proc-msg" id="procMsg">모의 송금 처리 중이에요</div>
-        <p class="proc-note">이 기기 안에서만 진행되는 시뮬레이션이에요</p>
+        <div class="proc-msg" id="procMsg">송금 처리 중이에요</div>
+        
       </div>`;
     },
     onEnter(e) { runProcessingAnimation(e); },
@@ -937,25 +931,25 @@ const SCREENS = {
       if (!tx) return `${appbar({ back: false, close: true })}<div class="screen-body"><div class="empty-state"><b>거래 정보를 찾을 수 없어요</b></div></div>`;
       const acc = getAccount(tx.accountId), r = findRecipient(`${tx.bankId}:${tx.recipientAccount}`);
       return `${appbar({ back: false, close: true })}
-      <div class="sim-banner">${ICON.info}체험 결과 · 실제 이체 아님</div>
-      <div class="screen-body complete-body" style="background-image:${watermarkUrl()}">
+      
+      <div class="screen-body complete-body">
         <div class="done-hero">
           <div class="done-ic"><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="36" fill="#3182F6"/><path class="check-path" d="M22 37.5l9.5 9.5L51 27.5" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h1><b>${esc(tx.recipientName)}</b>님께<br><span class="num">${won(tx.amount)}</span> 모의 송금을 완료했어요</h1>
-          <div class="sim-strong">${ICON.info}체험 결과 · 실제 돈은 보내지지 않았어요</div>
+          <h1><b>${esc(tx.recipientName)}</b>님께<br><span class="num">${won(tx.amount)}</span> 송금을 완료했어요</h1>
+          
         </div>
         <dl class="receipt info-list fade-up">
           <div class="info-row"><dt>받는 사람</dt><dd>${esc(tx.recipientName)}<span class="tag">직접 입력</span></dd></div>
           <div class="info-row"><dt>은행</dt><dd>${esc(tx.bankName)}</dd></div>
           <div class="info-row"><dt>계좌번호</dt><dd class="num">${maskAccount(tx.recipientAccount)}</dd></div>
-          <div class="info-row"><dt>모의 송금 금액</dt><dd class="num">${won(tx.amount)}</dd></div>
+          <div class="info-row"><dt>송금 금액</dt><dd class="num">${won(tx.amount)}</dd></div>
           <div class="info-row"><dt>출금 계좌</dt><dd>${esc(acc ? acc.nickname : '-')} · 잔액 ${won(tx.balanceAfter)}</dd></div>
           <div class="info-row"><dt>처리 일시</dt><dd class="num">${fmtDateTime(tx.createdAt)}</dd></div>
-          <div class="info-row"><dt>가상 거래번호</dt><dd class="num" style="font-size:12.5px">${esc(tx.id)}</dd></div>
-          <div class="info-row total"><dt>처리 상태</dt><dd>시뮬레이션 완료</dd></div>
+          <div class="info-row"><dt>거래번호</dt><dd class="num" style="font-size:12.5px">${esc(tx.id)}</dd></div>
+          <div class="info-row total"><dt>처리 상태</dt><dd>완료</dd></div>
         </dl>
         ${r ? `<div class="fav-line"><button class="${r.favorite ? 'on' : ''}" data-act="toggleFav" data-key="${esc(r.key)}">${ICON.star}${r.favorite ? '즐겨찾기에 추가됨' : '즐겨찾기에 추가'}</button></div>` : ''}
-        <p class="foot-note" style="padding-top:8px">이 화면은 이체 증빙이나 영수증으로 사용할 수 없어요.</p>
+        
       </div>
       <div class="bottom-cta"><button class="btn btn-primary" data-act="done">확인</button></div>`;
     },
@@ -1107,7 +1101,7 @@ function openConfirmSheet() {
         <div class="info-row"><dt>출금 계좌</dt><dd>${esc(acc.nickname)}</dd></div>
         <div class="info-row"><dt>보낸 후 잔액</dt><dd class="num">${won(acc.balance - t.amount)}</dd></div>
       </dl>
-      <p class="sim-line">${ICON.info}모의 송금 · 실제 돈은 이동하지 않아요</p>`,
+      `,
     foot: `<div class="btn-row"><button class="btn btn-gray" data-act="sheetClose">취소</button><button class="btn btn-primary" id="sendGo">보내기</button></div>`,
     onClose(reason) {
       if (reason !== 'continue' && appState.transfer.status === 'authorizing') { setTransferStatus('confirm'); setTransferStatus('amount'); saveAppState(); }
@@ -1146,12 +1140,12 @@ function runProcessingAnimation(e) {
     };
     requestAnimationFrame(tick);
   }, 250);
-  setTimeout(() => swapText('#procMsg', '가상 잔액에 반영하고 있어요'), 900);
+  setTimeout(() => swapText('#procMsg', '잔액에 반영하고 있어요'), 900);
   setTimeout(() => {
     stage.classList.add('arrived');
     el.querySelector('#sendTo .to-ic').innerHTML = '<svg class="arrive-check" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="#3182F6"/><path class="check-path" d="M13 22.8l6 6L31.5 16.5" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     swapText('#procTitle', `<b>${esc(name)}</b>님께 보냈어요`);
-    swapText('#procMsg', '모의 송금 처리가 끝났어요');
+    swapText('#procMsg', '송금 처리가 끝났어요');
   }, 1650);
   setTimeout(() => completeDemoTransfer(e.params.txId), 2450);
 }
@@ -1170,7 +1164,7 @@ function completeDemoTransfer(txId) {
     const prev = stack[stack.length - 1];
     if (prev) { prev.el.classList.remove('under'); prev.el.inert = false; paint(prev); }
     syncCurrent();
-    toast('잔액이 부족해 모의 송금을 진행하지 못했어요');
+    toast('잔액이 부족해 송금을 진행하지 못했어요');
     return false;
   }
   const now = Date.now();
@@ -1200,7 +1194,7 @@ const ACTIONS = {
   closeFlow: () => { const top = stack[stack.length - 1]; if (top && top.name === 'complete') leaveComplete(); else goBack(); },
   sheetClose: el => { const s = sheetOf(el); s && s.close('cancel'); },
   appMenu: () => openSheet({
-    title: '내 가상 계좌', sub: '계좌를 누르면 가상 잔액을 수정할 수 있어요.', flush: true,
+    title: '내 계좌', sub: '계좌를 누르면 잔액을 수정할 수 있어요.', flush: true,
     body: appState.accounts.map(a => `<button class="list-row row-tap" data-act="editBalance" data-id="${a.id}">${bankIc(OWN_BANK)}<div class="lr-main"><div class="lr-title">${esc(a.nickname)}</div><div class="lr-sub">${esc(a.bankName)} ${maskAccount(a.number)}</div></div><div class="lr-right"><div class="v num">${won(a.balance)}</div><div class="lr-sub" style="color:var(--primary)">수정</div></div></button>`).join('')
       + `<div class="divider" style="margin:8px 24px"></div>
       <button class="opt-row row-tap" data-act="about">${ICON.info}앱 정보</button>
@@ -1211,8 +1205,8 @@ const ACTIONS = {
     if (!acc) return;
     ACTIONS.sheetClose(el);
     openSheet({
-      title: `${esc(acc.nickname)} 잔액 수정`, sub: '가상 잔액이에요. 모의 송금은 이 금액 안에서만 할 수 있어요.',
-      body: `<div class="input-box"><input id="balInput" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-label="가상 잔액" value="${comma(acc.balance)}"><span style="font-size:22px;font-weight:600">원</span></div>
+      title: `${esc(acc.nickname)} 잔액 수정`, sub: '잔액이에요. 송금은 이 금액 안에서만 할 수 있어요.',
+      body: `<div class="input-box"><input id="balInput" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-label="잔액" value="${comma(acc.balance)}"><span style="font-size:22px;font-weight:600">원</span></div>
         <div class="input-meta"><span class="err" id="balErr"></span><span id="balKo"></span></div>`,
       foot: `<div class="btn-row"><button class="btn btn-gray" data-act="sheetClose">취소</button><button class="btn btn-primary" id="balSave">저장</button></div>`,
       onMount(sh, api) {
@@ -1242,8 +1236,8 @@ const ACTIONS = {
       },
     });
   },
-  about: el => { ACTIONS.sheetClose(el); infoSheet('앱 정보', '모아 체험판<br>모바일 금융 앱의 송금 경험을 체험하기 위한 시뮬레이터예요. 실제 은행 API나 결제망과 연결되지 않으며, 입력한 정보는 외부로 전송되지 않고 이 기기의 브라우저 저장소에만 보관돼요.'); },
-  resetData: el => { ACTIONS.sheetClose(el); confirmSheet({ title: '앱 데이터를 초기화할까요?', sub: '가상 잔액, 모의 거래내역, 최근 보낸 계좌, 즐겨찾기가 모두 처음 상태로 돌아가요.', ok: '초기화', danger: true, onOk: resetAppData }); },
+  about: el => { ACTIONS.sheetClose(el); infoSheet('앱 정보', '모아<br>입력한 정보와 거래내역은 이 기기의 브라우저에 저장돼요.'); },
+  resetData: el => { ACTIONS.sheetClose(el); confirmSheet({ title: '앱 데이터를 초기화할까요?', sub: '잔액, 거래내역, 최근 보낸 계좌, 즐겨찾기가 모두 처음 상태로 돌아가요.', ok: '초기화', danger: true, onOk: resetAppData }); },
   /* 송금 흐름 */
   recipMode: el => { const top = stack[stack.length - 1]; if (top && top.name === 'recipient') { top.params.mode = el.dataset.mode; paint(top, false); } },
   clearDraft: () => {
