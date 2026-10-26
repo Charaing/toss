@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#F2F4F6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="모아 - 체험용 모바일 금융 앱 시뮬레이터. 실제 돈은 이동하지 않습니다.">
+<title>모아 · 체험용 금융 앱</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#F2F4F6; --card:#FFFFFF; --primary:#3182F6; --primary-strong:#1B64DA; --primary-weak:#E8F3FF;
+  --text:#191F28; --text-2:#4E5968; --text-3:#8B95A1; --text-4:#B0B8C1;
+  --line:#E5E8EB; --disabled:#E5E8EB; --disabled-text:#B0B8C1; --fill:#F2F4F6;
+  --red:#F04452; --red-weak:#FFEEF0; --up:#F04452; --down:#3182F6; --green:#03B26C;
+  --nav-h:60px; --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --ease:cubic-bezier(.2,.8,.2,1); --dur:240ms;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  background:#E9ECEF;color:var(--text);-webkit-font-smoothing:antialiased;word-break:keep-all;
+  overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;line-height:1.45;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+input{font:inherit;color:inherit;border:0;outline:0;background:none;min-width:0}
+input::placeholder{color:var(--text-4)}
+input[type=search]::-webkit-search-cancel-button{display:none}
+svg{display:block}
+.num{font-variant-numeric:tabular-nums}
+.hidden{display:none!important}
+
+#app{position:relative;width:100%;max-width:460px;height:100vh;height:100dvh;margin:0 auto;background:var(--bg);overflow:hidden;isolation:isolate}
+@media (min-width:461px){#app{box-shadow:0 0 0 1px rgba(0,0,0,.03),0 10px 40px rgba(0,0,0,.06)}}
+
+/* ---------- Tabs ---------- */
+#tabs{position:absolute;left:0;right:0;top:0;bottom:calc(var(--nav-h) + var(--safe-b))}
+.tab-view{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;display:none;padding-bottom:24px}
+.tab-view.active{display:block;animation:fadeIn .2s var(--ease)}
+#bottomNav{position:absolute;left:0;right:0;bottom:0;height:calc(var(--nav-h) + var(--safe-b));padding-bottom:var(--safe-b);background:#fff;border-top:1px solid #F2F4F6;display:flex;z-index:10;border-radius:20px 20px 0 0;box-shadow:0 -1px 0 rgba(0,0,0,.02)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#B0B8C1;font-size:11px;font-weight:600;transition:color .15s}
+.nav-item svg{width:24px;height:24px;transition:transform .15s var(--ease)}
+.nav-item:active svg{transform:scale(.88)}
+.nav-item.active{color:var(--primary)}
+
+/* ---------- Stack screens ---------- */
+#stack{position:absolute;inset:0;z-index:20;pointer-events:none}
+.screen{position:absolute;inset:0;background:var(--bg);display:flex;flex-direction:column;pointer-events:auto;overflow:hidden;transition:transform var(--dur) var(--ease),opacity var(--dur) var(--ease);will-change:transform}
+.screen.white{background:#fff}
+.screen.offright{transform:translateX(100%)}
+.screen.under{transform:translateX(-22%)}
+.screen.fade-enter{opacity:0;transform:translateY(10px)}
+.screen.fade-out{opacity:0}
+.screen-body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+
+.appbar{flex:none;height:calc(54px + var(--safe-t));padding:var(--safe-t) 8px 0;display:flex;align-items:center;gap:2px;position:relative;z-index:2}
+.appbar .title{flex:1;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.appbar .spacer{flex:1}
+.icon-btn{width:44px;height:44px;flex:none;display:grid;place-items:center;border-radius:12px;color:var(--text);transition:background .15s,transform .12s}
+.icon-btn:active{background:rgba(2,32,71,.05);transform:scale(.94)}
+.icon-btn svg{width:24px;height:24px}
+.icon-btn.sm svg{width:20px;height:20px}
+.demo-chip{flex:none;font-size:11px;font-weight:700;color:var(--primary-strong);background:var(--primary-weak);padding:3px 7px;border-radius:6px;white-space:nowrap;letter-spacing:-.01em}
+.text-btn{font-size:15px;font-weight:600;color:var(--text-2);padding:8px 10px;border-radius:10px}
+.text-btn:active{background:var(--fill)}
+.text-btn.blue{color:var(--primary)}
+
+.bottom-cta{flex:none;padding:12px 20px calc(12px + var(--safe-b));background:inherit;position:relative}
+.bottom-cta::before{content:"";position:absolute;left:0;right:0;top:-20px;height:20px;background:linear-gradient(to bottom,transparent,var(--cta-fade,var(--bg)));pointer-events:none}
+.screen.white .bottom-cta{--cta-fade:#fff}
+
+/* ---------- Buttons ---------- */
+.btn{height:56px;border-radius:16px;font-size:17px;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform .12s var(--ease),background-color .15s,color .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:active{background:var(--primary-strong)}
+.btn-primary.disabled,.btn-primary:disabled{background:var(--disabled);color:var(--disabled-text)}
+.btn-primary.disabled:active{transform:none}
+.btn-secondary{background:var(--primary-weak);color:var(--primary-strong)}
+.btn-secondary:active{background:#D6E8FF}
+.btn-gray{background:var(--fill);color:var(--text-2)}
+.btn-gray:active{background:#E5E8EB}
+.btn-danger{background:var(--red);color:#fff}
+.btn-md{height:48px;font-size:16px;border-radius:14px}
+.btn-sm{height:38px;font-size:14px;border-radius:10px;width:auto;padding:0 14px}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+.mini-btn{flex:none;height:34px;padding:0 13px;border-radius:9px;background:var(--fill);color:var(--text-2);font-size:14px;font-weight:600;transition:transform .12s,background .15s}
+.mini-btn:active{transform:scale(.95);background:#E5E8EB}
+.mini-btn.blue{background:var(--primary-weak);color:var(--primary-strong)}
+.tap{transition:transform .14s var(--ease),background-color .15s}
+.tap:active{transform:scale(.975)}
+.row-tap{transition:background-color .15s}
+.row-tap:active{background:#F9FAFB}
+.card .row-tap:active,.sheet .row-tap:active{background:#F4F6F8}
+
+/* ---------- Common ---------- */
+.topbar{position:sticky;top:0;z-index:5;background:var(--bg);height:calc(56px + var(--safe-t));padding:var(--safe-t) 10px 0 20px;display:flex;align-items:center;gap:8px}
+.brand{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.brand b{font-size:20px;font-weight:800;letter-spacing:-.03em}
+.brand .logo{width:26px;height:26px;flex:none}
+.top-actions{display:flex;align-items:center}
+.top-actions .icon-btn{color:#4E5968;width:40px}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.02em;flex:1}
+.card{background:var(--card);border-radius:20px;margin:0 12px 12px;padding:22px 20px}
+.card.flush{padding:8px 0}
+.card-title{font-size:18px;font-weight:700;display:flex;align-items:center;gap:6px;letter-spacing:-.02em}
+.card-title .more{margin-left:auto;font-size:14px;font-weight:500;color:var(--text-3);display:flex;align-items:center}
+.card-title .more svg{width:16px;height:16px}
+.muted{color:var(--text-3)}
+.small{font-size:13px}
+.h1{font-size:24px;font-weight:700;line-height:1.4;letter-spacing:-.025em}
+.page-head{padding:8px 24px 20px}
+.page-head .sub{font-size:15px;color:var(--text-3);margin-top:6px}
+.tag{display:inline-flex;align-items:center;font-size:11px;font-weight:600;color:var(--text-2);background:var(--fill);border-radius:5px;padding:2px 6px;vertical-align:middle;white-space:nowrap;line-height:1.4}
+.tag.blue{color:var(--primary-strong);background:var(--primary-weak)}
+.tag.red{color:var(--red);background:var(--red-weak)}
+.divider{height:1px;background:var(--line)}
+.sep{height:12px}
+.sim-banner{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--primary-weak);color:var(--primary-strong);font-size:13px;font-weight:600;padding:9px 16px;text-align:center;flex:none}
+.sim-banner svg{width:16px;height:16px;flex:none}
+.notice{display:flex;gap:8px;font-size:13px;color:var(--text-3);line-height:1.55;padding:0 24px}
+.notice svg{width:16px;height:16px;flex:none;margin-top:2px}
+.foot-note{font-size:12px;color:var(--text-4);text-align:center;padding:20px 24px 8px;line-height:1.6}
+
+.bank-ic{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff;letter-spacing:-.04em;overflow:hidden}
+.bank-ic.sm{width:32px;height:32px;font-size:10.5px}
+.bank-ic.lg{width:44px;height:44px;font-size:13px}
+.bank-ic.empty{background:var(--fill);color:var(--text-4)}
+.bank-ic.empty svg{width:20px;height:20px}
+.ic-circle{width:40px;height:40px;border-radius:14px;display:grid;place-items:center;flex:none}
+.ic-circle svg{width:22px;height:22px}
+
+.list-row{display:flex;align-items:center;gap:14px;padding:12px 20px;min-height:68px;width:100%;text-align:left}
+.lr-main{flex:1;min-width:0}
+.lr-title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lr-sub{font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.lr-right{text-align:right;flex:none}
+.lr-right .v{font-size:15px;font-weight:600}
+.chev{color:var(--text-4);flex:none}
+.chev svg{width:18px;height:18px}
+.star-btn{color:#D1D6DB}
+.star-btn.on{color:#FFC342}
+.star-btn.on svg{fill:currentColor}
+
+.empty-state{text-align:center;padding:36px 24px 40px;color:var(--text-3);font-size:15px}
+.empty-state .ei{width:56px;height:56px;border-radius:50%;background:var(--fill);display:grid;place-items:center;margin:0 auto 14px;color:var(--text-4)}
+.empty-state .ei svg{width:26px;height:26px}
+.empty-state b{display:block;color:var(--text-2);font-size:16px;font-weight:600;margin-bottom:4px}
+
+.info-list{display:flex;flex-direction:column}
+.info-row{display:flex;align-items:flex-start;gap:12px;padding:11px 0;font-size:15px}
+.info-row dt{flex:none;width:92px;color:var(--text-3)}
+.info-row dd{flex:1;min-width:0;text-align:right;font-weight:500;overflow-wrap:anywhere;word-break:break-all}
+.info-row dd .tag{margin-left:4px}
+.info-row .edit-link{flex:none;font-size:14px;font-weight:600;color:var(--primary);padding:0 2px 0 6px;margin:-6px -6px -6px 0;height:32px;border-radius:8px}
+.info-row .edit-link:active{background:var(--primary-weak)}
+.info-row.total dd{font-weight:700;color:var(--primary-strong)}
+
+/* ---------- Home ---------- */
+.asset-card .label{font-size:15px;color:var(--text-2);font-weight:500;display:flex;align-items:center;gap:4px}
+.asset-card .label svg{width:16px;height:16px;color:var(--text-4)}
+.asset-card .big{font-size:28px;font-weight:700;letter-spacing:-.03em;margin-top:4px}
+.asset-card .sub{font-size:13px;color:var(--text-3);margin-top:2px}
+.asset-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:16px;background:var(--fill)}
+.asset-bar span{display:block;height:100%}
+.asset-legend{display:flex;gap:14px;margin-top:10px;font-size:13px;color:var(--text-2)}
+.asset-legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.acc-row{display:flex;align-items:center;gap:14px;padding:12px 20px;width:100%;text-align:left}
+.acc-main{flex:1;min-width:0}
+.acc-name{font-size:14px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acc-bal{font-size:18px;font-weight:700;letter-spacing:-.02em;margin-top:1px}
+.acc-meta{font-size:12px;color:var(--text-3);margin-top:1px}
+.svc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px 4px;margin-top:18px}
+.svc{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--text-2);text-align:center;padding:4px 0;border-radius:14px;letter-spacing:-.02em}
+.svc .ic-circle{width:44px;height:44px;border-radius:15px}
+.svc:active{background:var(--fill)}
+.spend-mini{display:flex;align-items:center;gap:14px}
+.spend-mini .v{font-size:20px;font-weight:700;margin-top:2px}
+.banner{display:flex;align-items:center;gap:14px;background:#fff;border-radius:20px;margin:0 12px 12px;padding:18px 20px;width:calc(100% - 24px);text-align:left}
+.banner .t{font-size:15px;font-weight:600}
+.banner .s{font-size:13px;color:var(--text-3);margin-top:2px}
+
+/* ---------- Transfer: recipient ---------- */
+.seg{display:flex;margin:0 20px 16px;background:var(--fill);border-radius:12px;padding:4px}
+.screen.white .seg{background:#F2F4F6}
+.seg-item{flex:1;height:38px;border-radius:9px;font-size:15px;font-weight:600;color:var(--text-3);transition:background .18s,color .18s,box-shadow .18s}
+.seg-item.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.form-card{margin:0 20px;border-radius:18px;background:#F9FAFB;border:1px solid #F2F4F6}
+.bank-field{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;text-align:left;border-radius:18px 18px 0 0}
+.bank-field .bf-name{flex:1;font-size:17px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bank-field .bf-ph{flex:1;font-size:17px;color:var(--text-4);font-weight:500}
+.form-card .divider{margin:0 16px}
+.acct-field{display:flex;align-items:center;gap:8px;padding:14px 12px 4px 16px}
+.acct-input{flex:1;font-size:20px;font-weight:600;letter-spacing:.01em;height:40px;font-variant-numeric:tabular-nums}
+.acct-input::placeholder{font-weight:500;font-size:18px;letter-spacing:-.01em}
+.clear-btn{width:28px;height:28px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;background:#C9CED4}
+.clear-btn svg{width:14px;height:14px}
+.clear-btn:active{background:#B0B8C1}
+.field-msg{min-height:18px;font-size:13px;color:var(--red);padding:2px 16px 0;transition:opacity .15s}
+.field-msg.info{color:var(--text-3)}
+.name-line{display:flex;align-items:center;gap:8px;padding:6px 10px 12px 16px;min-height:48px}
+.name-status{flex:1;min-width:0;font-size:14px;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.name-status b{font-weight:700;color:var(--text)}
+.name-btn{flex:none;display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 11px;border-radius:10px;background:var(--primary-weak);color:var(--primary-strong);font-size:13px;font-weight:700;transition:transform .12s,background .15s}
+.name-btn svg{width:14px;height:14px}
+.name-btn:active{transform:scale(.95);background:#D6E8FF}
+.name-btn.attn{animation:attn .5s var(--ease)}
+.hint{font-size:13px;color:var(--text-3);padding:10px 24px 0;line-height:1.5}
+.ls{margin-top:28px}
+.ls-title{font-size:15px;font-weight:600;color:var(--text-2);padding:0 24px 4px;display:flex;align-items:center;gap:6px}
+.ls .list-row{padding:10px 12px 10px 24px}
+.lr-sub2{font-size:12px;color:var(--text-4);margin-top:1px}
+
+/* ---------- Bank sheet ---------- */
+.search-box{display:flex;align-items:center;gap:8px;height:48px;border-radius:14px;background:var(--fill);padding:0 12px;margin-bottom:12px}
+.search-box svg{width:20px;height:20px;color:var(--text-4);flex:none}
+.search-box input{flex:1;font-size:16px;height:100%}
+.sticky-top{position:sticky;top:0;background:#fff;z-index:2;padding-top:4px}
+.bank-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-bottom:8px}
+.bank-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:14px 4px 12px;border-radius:16px;background:#F9FAFB;font-size:13px;font-weight:500;color:var(--text-2);min-height:92px;text-align:center;letter-spacing:-.03em;line-height:1.3}
+.bank-tile:active{background:#F2F4F6}
+.bank-tile.on{background:var(--primary-weak);color:var(--primary-strong);font-weight:700}
+.empty-mini{text-align:center;color:var(--text-3);font-size:15px;padding:40px 0}
+
+/* ---------- Sheets ---------- */
+#sheetLayer{position:absolute;inset:0;z-index:50;pointer-events:none}
+.sheet-wrap{position:absolute;inset:0;pointer-events:auto}
+.sheet-dim{position:absolute;inset:0;background:rgba(0,12,30,.48);opacity:0;transition:opacity .26s var(--ease)}
+.sheet{position:absolute;left:0;right:0;bottom:var(--kb,0px);background:#fff;border-radius:24px 24px 0 0;padding:6px 0 calc(14px + var(--safe-b));transform:translateY(105%);transition:transform .28s var(--ease),bottom .2s;max-height:calc(100% - 40px - var(--safe-t));display:flex;flex-direction:column}
+.sheet.tall{height:calc(100% - 40px - var(--safe-t))}
+.sheet-wrap.open .sheet-dim{opacity:1}
+.sheet-wrap.open .sheet{transform:none}
+.grabber{width:36px;height:4px;border-radius:2px;background:#E5E8EB;margin:4px auto 6px;flex:none}
+.sheet-head{padding:14px 24px 6px;flex:none}
+.sheet-title{font-size:20px;font-weight:700;line-height:1.4;letter-spacing:-.02em}
+.sheet-sub{font-size:15px;color:var(--text-3);margin-top:4px;line-height:1.5}
+.sheet-body{flex:1;overflow-y:auto;padding:12px 24px 4px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.sheet-body.flush{padding-left:0;padding-right:0}
+.sheet-foot{padding:12px 20px 0;flex:none}
+.input-box{display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--line);padding:6px 0;transition:border-color .15s}
+.input-box:focus-within{border-color:var(--primary)}
+.input-box input{flex:1;font-size:22px;font-weight:600;height:44px}
+.input-meta{display:flex;justify-content:space-between;font-size:13px;margin-top:8px;min-height:18px;color:var(--text-3)}
+.input-meta .err{color:var(--red)}
+.opt-row{display:flex;align-items:center;gap:12px;width:100%;padding:16px 24px;font-size:17px;font-weight:500;text-align:left}
+.opt-row svg{width:22px;height:22px;color:var(--text-3)}
+.opt-row.danger{color:var(--red)}
+.opt-row.danger svg{color:var(--red)}
+
+/* ---------- Amount ---------- */
+.amt-top{padding:4px 24px 0;flex:none}
+.to-line{display:flex;align-items:center;gap:10px}
+.to-name{font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.to-sub{font-size:13px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.amt-top .h1{margin-top:18px;font-size:22px}
+.amt-display{flex:1;display:flex;flex-direction:column;justify-content:center;padding:4px 24px;min-height:96px}
+.amt-value{font-size:40px;font-weight:700;letter-spacing:-.03em;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.amt-value.zero{color:#C9CED4}
+.amt-value.long{font-size:32px}
+.amt-value.bump{animation:bump .18s var(--ease)}
+.amt-value.err{color:var(--red)}
+.amt-value.shake{animation:shake .32s}
+.amt-sub{font-size:14px;color:var(--text-3);margin-top:6px;min-height:20px}
+.amt-sub.err{color:var(--red);font-weight:500}
+.source-row{display:flex;align-items:center;gap:10px;margin:0 16px;padding:12px 14px;border-radius:14px;background:#F9FAFB;text-align:left;flex:none}
+.source-row .s-main{flex:1;min-width:0;font-size:14px;color:var(--text-2)}
+.source-row .s-main b{color:var(--text);font-weight:600}
+.quick-row{display:flex;gap:6px;padding:12px 16px 4px;flex:none;overflow-x:auto;scrollbar-width:none}
+.quick-row::-webkit-scrollbar{display:none}
+.chip{flex:1 0 auto;height:36px;padding:0 12px;border-radius:10px;background:var(--fill);font-size:14px;font-weight:600;color:var(--text-2);white-space:nowrap;transition:transform .12s,background .15s}
+.chip:active{transform:scale(.94);background:#E5E8EB}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);padding:4px 12px 0;flex:none}
+.key{height:clamp(44px,7.4dvh,62px);font-size:24px;font-weight:600;border-radius:16px;display:grid;place-items:center;color:var(--text);transition:background .1s,transform .1s;font-variant-numeric:tabular-nums}
+.key:active{background:var(--fill);transform:scale(.92)}
+.key svg{width:28px;height:28px}
+
+/* ---------- Confirm ---------- */
+.confirm-hero{text-align:center;padding:12px 24px 24px}
+.confirm-hero .bank-ic{margin:0 auto 18px;width:56px;height:56px;font-size:15px}
+.confirm-hero h1{font-size:24px;font-weight:700;line-height:1.45;letter-spacing:-.025em;overflow-wrap:anywhere}
+.confirm-hero h1 .amt{color:var(--primary)}
+.confirm-hero .sim-tag{display:inline-flex;margin-top:12px}
+.detail-box{margin:0 20px;border-top:1px solid var(--line);padding-top:8px}
+.warn-box{margin:16px 20px 24px;padding:14px 16px;border-radius:14px;background:#F9FAFB;font-size:13px;color:var(--text-2);line-height:1.6;display:flex;gap:8px}
+.warn-box svg{width:16px;height:16px;color:var(--text-3);flex:none;margin-top:2px}
+
+/* ---------- Processing / Complete ---------- */
+.proc-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 24px 80px;text-align:center}
+.loader{width:72px;height:72px;margin-bottom:28px;position:relative}
+.loader svg.spin{width:72px;height:72px;animation:spin .9s linear infinite}
+.loader .track{fill:none;stroke:var(--primary-weak);stroke-width:6}
+.loader .arc{fill:none;stroke:var(--primary);stroke-width:6;stroke-linecap:round;stroke-dasharray:56 200}
+.loader .done{position:absolute;inset:0;animation:pop .42s cubic-bezier(.3,1.5,.5,1)}
+.check-path{stroke-dasharray:44;stroke-dashoffset:44;animation:draw .36s .12s var(--ease) forwards}
+.proc-title{font-size:24px;font-weight:700;line-height:1.45;letter-spacing:-.025em;overflow-wrap:anywhere}
+.proc-msg{font-size:17px;color:var(--text-2);margin-top:6px;font-weight:500;transition:opacity .2s}
+.proc-msg.fade{opacity:0}
+.proc-note{font-size:13px;color:var(--text-3);margin-top:20px}
+.complete-body{background-repeat:repeat;background-size:220px 140px}
+.done-hero{text-align:center;padding:28px 24px 20px}
+.done-ic{width:72px;height:72px;margin:0 auto 22px;animation:pop .5s cubic-bezier(.3,1.5,.5,1)}
+.done-hero h1{font-size:24px;font-weight:700;line-height:1.45;letter-spacing:-.025em;overflow-wrap:anywhere}
+.done-hero .sim-strong{display:inline-flex;align-items:center;gap:6px;margin-top:16px;background:var(--primary-weak);color:var(--primary-strong);font-size:14px;font-weight:700;border-radius:10px;padding:8px 12px}
+.done-hero .sim-strong svg{width:16px;height:16px}
+.receipt{margin:8px 20px 0;padding:6px 18px;border-radius:18px;background:rgba(249,250,251,.92);border:1px solid #F2F4F6}
+.receipt .info-row{font-size:14px;padding:10px 0}
+.receipt .info-row dt{width:84px}
+.fav-line{display:flex;justify-content:center;margin:14px 0 4px}
+.fav-line button{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--text-2);padding:8px 12px;border-radius:10px}
+.fav-line button:active{background:var(--fill)}
+.fav-line svg{width:18px;height:18px}
+.fav-line .on svg{color:#FFC342;fill:#FFC342}
+.done-actions{display:flex;flex-direction:column;gap:8px}
+
+/* ---------- Account detail ---------- */
+.acct-hero{background:#fff;padding:8px 24px 24px}
+.acct-hero .meta{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text-3)}
+.acct-hero .meta button{font-size:13px;color:var(--text-3);text-decoration:underline;text-underline-offset:2px;padding:4px}
+.acct-hero .bal{font-size:30px;font-weight:700;letter-spacing:-.03em;margin:6px 0 20px}
+.hist{background:#fff;margin-top:12px;min-height:50vh;padding-bottom:24px}
+.hist-head{display:flex;align-items:center;gap:8px;padding:22px 24px 6px;font-size:18px;font-weight:700}
+.date-label{font-size:13px;font-weight:600;color:var(--text-3);padding:18px 24px 4px}
+.tx-row{display:flex;align-items:center;gap:12px;padding:12px 24px;width:100%;text-align:left}
+.tx-main{flex:1;min-width:0}
+.tx-title{font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-time{font-size:13px;color:var(--text-3);margin-top:1px}
+.tx-amt{text-align:right;flex:none}
+.tx-amt .a{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.tx-amt .b{font-size:13px;color:var(--text-3);margin-top:1px;font-variant-numeric:tabular-nums}
+
+/* ---------- Benefits / stock / more ---------- */
+.point-card .pv{font-size:28px;font-weight:700;letter-spacing:-.03em;margin-top:4px}
+.week{display:flex;justify-content:space-between;margin:18px 0 16px}
+.day{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--text-3);font-weight:500}
+.day i{width:34px;height:34px;border-radius:50%;background:var(--fill);display:grid;place-items:center;color:transparent}
+.day i svg{width:16px;height:16px}
+.day.on i{background:var(--primary);color:#fff}
+.day.today{color:var(--text);font-weight:700}
+.day.today i{box-shadow:0 0 0 2px var(--primary-weak) inset}
+.day.today.on i{box-shadow:none}
+.event-card{display:flex;align-items:center;gap:14px}
+.event-card .t{font-size:17px;font-weight:700;line-height:1.4}
+.event-card .s{font-size:13px;color:var(--text-3);margin-top:3px}
+.event-art{width:64px;height:64px;border-radius:18px;flex:none;display:grid;place-items:center}
+.event-art svg{width:34px;height:34px}
+.idx-row{display:flex;gap:8px;overflow-x:auto;padding:0 12px 12px;scrollbar-width:none}
+.idx-row::-webkit-scrollbar{display:none}
+.idx{flex:0 0 auto;min-width:148px;background:#fff;border-radius:18px;padding:16px}
+.idx .n{font-size:13px;color:var(--text-2);font-weight:500}
+.idx .v{font-size:17px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.idx .c{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.up{color:var(--up)} .down{color:var(--down)}
+.spark{width:100%;height:30px;margin-top:8px}
+.stock-row .lr-right .v{font-variant-numeric:tabular-nums}
+.stock-row .lr-right .c{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.stock-logo{width:40px;height:40px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:14px;font-weight:800;color:#fff}
+.rank{width:18px;font-size:15px;font-weight:700;color:var(--primary);flex:none;text-align:center}
+.profile-row{display:flex;align-items:center;gap:14px;padding:4px 0}
+.avatar-lg{width:52px;height:52px;border-radius:50%;background:var(--primary-weak);color:var(--primary);display:grid;place-items:center;flex:none}
+.avatar-lg svg{width:28px;height:28px}
+.menu-group{background:#fff;border-radius:20px;margin:0 12px 12px;padding:10px 0}
+.menu-group .g-title{font-size:13px;font-weight:600;color:var(--text-3);padding:10px 20px 4px}
+.menu-item{display:flex;align-items:center;gap:14px;width:100%;padding:12px 20px;font-size:16px;font-weight:500;text-align:left;min-height:52px}
+.menu-item .ic-circle{width:34px;height:34px;border-radius:11px}
+.menu-item .ic-circle svg{width:19px;height:19px}
+.menu-item .lbl{flex:1}
+.menu-item.danger{color:var(--red)}
+.toggle{position:relative;width:50px;height:30px;border-radius:15px;background:#D1D6DB;flex:none;transition:background .2s}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:transform .2s var(--ease)}
+.toggle.on{background:var(--primary)}
+.toggle.on::after{transform:translateX(20px)}
+.bars{display:flex;flex-direction:column;gap:14px;margin-top:18px}
+.bar-line .bl-top{display:flex;justify-content:space-between;font-size:14px;margin-bottom:6px}
+.bar-line .bl-top b{font-weight:600}
+.bar-track{height:10px;border-radius:5px;background:var(--fill);overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;transform-origin:left;animation:grow .6s var(--ease)}
+.vcard{border-radius:18px;padding:20px;color:#fff;background:#2B3A55;aspect-ratio:1.6/1;display:flex;flex-direction:column;justify-content:space-between;max-width:320px;margin:4px auto 0}
+.vcard .vn{font-size:18px;letter-spacing:.12em;font-variant-numeric:tabular-nums}
+.vcard .vt{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600}
+.gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+.gauge-wrap .score{font-size:36px;font-weight:800;margin-top:-58px;letter-spacing:-.03em}
+.gauge-wrap .grade{font-size:14px;color:var(--text-3);margin-top:2px}
+.week-bars{display:flex;align-items:flex-end;gap:10px;height:110px;margin-top:20px}
+.week-bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;font-size:12px;color:var(--text-3)}
+.week-bars span{width:100%;max-width:28px;border-radius:6px 6px 3px 3px;background:#D6E8FF;transform-origin:bottom;animation:growY .6s var(--ease)}
+.week-bars .hi span{background:var(--primary)}
+.mission{display:flex;align-items:center;gap:12px;padding:12px 20px}
+.mission .lr-main .lr-title{font-size:15px}
+.chart-box{position:relative;margin:10px 0 0}
+.chart-box svg{width:100%;height:160px}
+.chart-range{display:flex;gap:4px;margin-top:10px}
+.chart-range button{flex:1;height:32px;border-radius:8px;font-size:13px;font-weight:600;color:var(--text-3)}
+.chart-range button.on{background:var(--fill);color:var(--text)}
+
+/* ---------- Toast ---------- */
+#toast{position:absolute;left:50%;bottom:calc(var(--nav-h) + var(--safe-b) + 16px);transform:translate(-50%,12px);background:rgba(25,31,40,.94);color:#fff;font-size:15px;font-weight:500;padding:12px 18px;border-radius:14px;max-width:calc(100% - 40px);width:max-content;text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s var(--ease);z-index:100;line-height:1.45}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.high{bottom:calc(var(--safe-b) + 96px)}
+#toast.top{top:calc(var(--safe-t) + 16px);bottom:auto;transform:translate(-50%,-12px)}
+#toast.top.show{transform:translate(-50%,0)}
+
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes bump{50%{transform:scale(1.03)}}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+@keyframes attn{30%{transform:scale(1.08)}60%{transform:scale(.97)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes growY{from{transform:scaleY(0)}}
+.fade-up{animation:fadeUp .32s var(--ease) both}
+@media (max-width:360px){
+  .h1{font-size:21px}.amt-value{font-size:34px}.amt-value.long{font-size:27px}
+  .svc-grid{grid-template-columns:repeat(4,1fr)}
+  .card{padding:20px 16px}.acc-row,.list-row{padding-left:16px;padding-right:16px}
+  .confirm-hero h1,.done-hero h1,.proc-title{font-size:21px}
+  .info-row dt{width:80px}
+}
+@media (max-height:640px){.amt-top .h1{margin-top:10px;font-size:20px}.amt-display{min-height:72px}.amt-value{font-size:34px}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="tabs" aria-label="메인 화면"></main>
+  <nav id="bottomNav" aria-label="하단 메뉴"></nav>
+  <div id="stack"></div>
+  <div id="sheetLayer"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+ * 모아 (MOA) — 체험용 모바일 금융 앱 시뮬레이터
+ * 실제 은행/금융 서비스와 연결되지 않으며, 모든 데이터는 이 기기의 LocalStorage에만 저장됩니다.
+ * 네트워크 요청을 보내는 코드는 없습니다(글꼴 CSS 제외).
+ * ========================================================= */
+
+/* ---------- 유틸 ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const comma = n => Number(n || 0).toLocaleString('ko-KR');
+const won = n => `${comma(n)}원`;
+const isMoney = n => Number.isSafeInteger(n) && n >= 0;
+const MAX_AMOUNT = 9999999999;
+const MAX_NAME = 20;
+const ACCT_MIN = 6, ACCT_MAX = 20;
+const pad2 = n => String(n).padStart(2, '0');
+const dateKey = (ts = Date.now()) => { const d = new Date(ts); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+const fmtDateTime = ts => { const d = new Date(ts); return `${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`; };
+const fmtTime = ts => { const d = new Date(ts); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+const fmtMonthDay = ts => { const d = new Date(ts); return `${d.getMonth() + 1}월 ${d.getDate()}일`; };
+function fmtRelDay(ts) {
+  const today = dateKey(), k = dateKey(ts), y = dateKey(Date.now() - 864e5);
+  return k === today ? '오늘' : k === y ? '어제' : fmtMonthDay(ts);
+}
+function koreanAmount(n) {
+  if (!n) return '';
+  const eok = Math.floor(n / 1e8), man = Math.floor((n % 1e8) / 1e4), rest = n % 1e4, p = [];
+  if (eok) p.push(`${comma(eok)}억`);
+  if (man) p.push(`${comma(man)}만`);
+  if (rest) p.push(comma(rest));
+  return p.join(' ') + '원';
+}
+function maskAccount(num) {
+  const n = String(num || '').replace(/\D/g, '');
+  if (n.length <= 4) return n;
+  const head = n.length >= 10 ? 3 : 2, tail = n.length >= 10 ? 4 : 2;
+  const stars = Math.max(2, Math.min(6, n.length - head - tail));
+  return n.slice(0, head) + '*'.repeat(stars) + n.slice(-tail);
+}
+function genTxId() {
+  const d = new Date(), rnd = (crypto.getRandomValues ? Array.from(crypto.getRandomValues(new Uint8Array(4)), b => b.toString(36).padStart(2, '0')).join('') : Math.random().toString(36).slice(2, 10)).slice(0, 6).toUpperCase();
+  return `SIM-${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}-${pad2(d.getHours())}${pad2(d.getMinutes())}-${rnd}`;
+}
+
+/* ---------- 아이콘 (직접 작성한 선형 SVG) ---------- */
+const sv = (p, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ${extra}>${p}</svg>`;
+const ICON = {
+  home: sv('<path d="M3.5 10.2 12 3.5l8.5 6.7V19a1.5 1.5 0 0 1-1.5 1.5h-4.2v-5.8H9.2v5.8H5A1.5 1.5 0 0 1 3.5 19z"/>'),
+  gift: sv('<rect x="3.5" y="8" width="17" height="4.2" rx="1"/><path d="M12 8v12.5M18.8 12.2V19a1.5 1.5 0 0 1-1.5 1.5H6.7A1.5 1.5 0 0 1 5.2 19v-6.8"/><path d="M12 8S10.6 3.5 8 3.5a2.2 2.2 0 0 0 0 4.5M12 8s1.4-4.5 4-4.5a2.2 2.2 0 0 1 0 4.5"/>'),
+  send: sv('<path d="M20.5 3.5 10.4 13.6"/><path d="M20.5 3.5 14.2 20.5l-3.8-6.9-6.9-3.8z"/>'),
+  stock: sv('<path d="M3.5 3.5v17h17"/><path d="m7.5 14.5 3.5-3.8 3 2.8 5-6"/>'),
+  menu: sv('<path d="M4 6.5h16M4 12h16M4 17.5h16"/>'),
+  user: sv('<circle cx="12" cy="8.2" r="3.9"/><path d="M4.5 20.2c.7-3.7 3.8-6 7.5-6s6.8 2.3 7.5 6"/>'),
+  bell: sv('<path d="M6.2 9.5a5.8 5.8 0 0 1 11.6 0c0 5.3 2.2 7 2.2 7H4s2.2-1.7 2.2-7"/><path d="M10 19.8a2.2 2.2 0 0 0 4 0"/>'),
+  gear: sv('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'),
+  back: sv('<path d="m15 18.5-6.5-6.5L15 5.5"/>', 'stroke-width="2.1"'),
+  close: sv('<path d="M18 6 6 18M6 6l12 12"/>', 'stroke-width="2.1"'),
+  chevR: sv('<path d="m9.5 5.5 6.5 6.5-6.5 6.5"/>', 'stroke-width="2"'),
+  chevD: sv('<path d="m6 9.5 6 6 6-6"/>', 'stroke-width="2"'),
+  search: sv('<circle cx="11" cy="11" r="6.8"/><path d="m20.5 20.5-4.6-4.6"/>', 'stroke-width="2"'),
+  bank: sv('<path d="M3.5 9.5 12 4l8.5 5.5"/><path d="M5.5 10v7.5M9.8 10v7.5M14.2 10v7.5M18.5 10v7.5M3.5 20h17"/>'),
+  card: sv('<rect x="2.8" y="5.2" width="18.4" height="13.6" rx="2.6"/><path d="M2.8 10h18.4M6.5 15h4"/>'),
+  pie: sv('<path d="M20.5 13A8.5 8.5 0 1 1 11 3.5V13z"/><path d="M14.5 3.7a8.6 8.6 0 0 1 5.8 5.8h-5.8z"/>'),
+  loan: sv('<circle cx="9" cy="9" r="5.5"/><path d="M15.3 10.2a5.5 5.5 0 1 1-5.1 5.1"/><path d="M9 6.8v4.4M7.2 9h3.6"/>'),
+  gauge: sv('<path d="M3.6 16.5a8.6 8.6 0 1 1 16.8 0"/><path d="m12 13.5 3.8-4.2"/><circle cx="12" cy="14" r="1.2"/>'),
+  shield: sv('<path d="M12 3.2 4.5 6v5.8c0 4.6 3.2 7.8 7.5 9 4.3-1.2 7.5-4.4 7.5-9V6z"/><path d="m8.8 12 2.2 2.2 4.2-4.4"/>'),
+  trend: sv('<path d="m3.5 16.5 5.8-5.8 3.8 3.8 7.4-7.4"/><path d="M14.5 7h6v6"/>'),
+  receipt: sv('<path d="M5.5 3.5h13v17l-2.6-1.6-2.3 1.6-2.3-1.6-2.3 1.6-2.3-1.6-1.2.8z"/><path d="M8.8 8.5h6.4M8.8 12h6.4M8.8 15.5h3.6"/>'),
+  spark: sv('<path d="M12 3.5c.6 4.2 2.4 6.6 7 7.5-4.6.9-6.4 3.3-7 7.5-.6-4.2-2.4-6.6-7-7.5 4.6-.9 6.4-3.3 7-7.5z"/><path d="M19 3.5v3M17.5 5h3"/>'),
+  ticket: sv('<path d="M4.5 5.5h15a1 1 0 0 1 1 1v3a2.5 2.5 0 0 0 0 5v3a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-3a2.5 2.5 0 0 0 0-5v-3a1 1 0 0 1 1-1z"/><path d="M14.5 5.5v13" stroke-dasharray="2 2.4"/>'),
+  point: sv('<circle cx="12" cy="12" r="8.5"/><path d="M10 16.2V7.8h2.7a2.6 2.6 0 0 1 0 5.2H10"/>'),
+  star: sv('<path d="m12 3.6 2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/>'),
+  check: sv('<path d="m5 12.5 4.5 4.5L19 7.5"/>', 'stroke-width="2.4"'),
+  edit: sv('<path d="M4.5 19.5h3.8L19 8.8 15.2 5 4.5 15.7z"/><path d="m13.2 7 3.8 3.8"/>', 'stroke-width="2"'),
+  more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="18.5" r="1.6"/></svg>',
+  copy: sv('<rect x="8.5" y="8.5" width="11.5" height="11.5" rx="2"/><path d="M15.5 8.5V5.5A1.5 1.5 0 0 0 14 4H5.5A1.5 1.5 0 0 0 4 5.5V14a1.5 1.5 0 0 0 1.5 1.5h3"/>'),
+  info: sv('<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.2M12 7.8v.1"/>', 'stroke-width="2"'),
+  trash: sv('<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l.9 12.5a1.2 1.2 0 0 0 1.2 1h6.8a1.2 1.2 0 0 0 1.2-1L17.5 7"/>'),
+  headset: sv('<path d="M4.5 14v-2a7.5 7.5 0 0 1 15 0v2"/><rect x="3.5" y="13.5" width="4" height="6.5" rx="1.6"/><rect x="16.5" y="13.5" width="4" height="6.5" rx="1.6"/>'),
+  reset: sv('<path d="M3.8 12a8.2 8.2 0 1 0 2.5-5.9L3.8 8.5"/><path d="M3.8 3.8v4.7h4.7"/>'),
+  calendar: sv('<rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+  target: sv('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.8"/><circle cx="12" cy="12" r="1.2"/>'),
+  eye: sv('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>'),
+  lock: sv('<rect x="5" y="10.5" width="14" height="10" rx="2.2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/>'),
+  backspace: sv('<path d="M20 5.5H9.2L3.5 12l5.7 6.5H20a1 1 0 0 0 1-1v-11a1 1 0 0 0-1-1z"/><path d="m15.8 9.5-5 5M10.8 9.5l5 5"/>'),
+  people: sv('<circle cx="9" cy="8.5" r="3.4"/><path d="M2.8 19.5c.6-3.3 3.1-5.3 6.2-5.3s5.6 2 6.2 5.3"/><path d="M15.5 5.3a3.4 3.4 0 0 1 0 6.4M17.6 14.4c1.9.7 3.2 2.5 3.6 5.1"/>'),
+  coin: sv('<ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7"/><path d="M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/>'),
+  swap: sv('<path d="M4.5 8.5h14l-3.5-3.5M19.5 15.5h-14l3.5 3.5"/>'),
+  doc: sv('<path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12.5h6M9 16h6"/>'),
+};
+const LOGO = '<svg class="logo" viewBox="0 0 26 26"><rect width="26" height="26" rx="8" fill="#3182F6"/><path d="M7 17.5V9.6l6 5 6-5v7.9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+/* ---------- 금융기관 목록 (독자 색상 아이콘) ---------- */
+const BANKS = [
+  { id: 'kb', name: 'KB국민은행', short: 'KB', color: '#F2B705', fg: '#3A2E00', alias: ['국민', 'kb', '케이비'] },
+  { id: 'shinhan', name: '신한은행', short: '신한', color: '#2357E8', alias: ['신한'] },
+  { id: 'hana', name: '하나은행', short: '하나', color: '#0B8A7E', alias: ['하나', 'keb'] },
+  { id: 'woori', name: '우리은행', short: '우리', color: '#1478C8', alias: ['우리'] },
+  { id: 'nh', name: 'NH농협은행', short: 'NH', color: '#14A44D', alias: ['농협', 'nh', '엔에이치'] },
+  { id: 'ibk', name: 'IBK기업은행', short: 'IBK', color: '#1E5CA8', alias: ['기업', 'ibk'] },
+  { id: 'kakao', name: '카카오뱅크', short: '카뱅', color: '#F7D917', fg: '#3A3100', alias: ['카카오', '카뱅'] },
+  { id: 'tossbank', name: '토스뱅크', short: 'T', color: '#4A5568', alias: ['토스'] },
+  { id: 'kbank', name: '케이뱅크', short: 'K', color: '#2A2C7A', alias: ['케이', 'kbank', '케뱅'] },
+  { id: 'sc', name: 'SC제일은행', short: 'SC', color: '#0E7FB8', alias: ['제일', 'sc'] },
+  { id: 'busan', name: '부산은행', short: '부산', color: '#D9304A', alias: ['부산', 'bnk'] },
+  { id: 'im', name: '대구은행(iM뱅크)', short: 'iM', color: '#14A39A', alias: ['대구', 'im', '아이엠', 'dgb'] },
+  { id: 'kyongnam', name: '경남은행', short: '경남', color: '#C8323E', alias: ['경남'] },
+  { id: 'gwangju', name: '광주은행', short: '광주', color: '#2F5D9E', alias: ['광주'] },
+  { id: 'jeonbuk', name: '전북은행', short: '전북', color: '#3667A6', alias: ['전북'] },
+  { id: 'jeju', name: '제주은행', short: '제주', color: '#4A86C9', alias: ['제주'] },
+  { id: 'suhyup', name: '수협은행', short: '수협', color: '#1B8FD1', alias: ['수협'] },
+  { id: 'post', name: '우체국', short: '우체', color: '#E2572B', alias: ['우체국', '우편'] },
+  { id: 'mg', name: '새마을금고', short: 'MG', color: '#2A5DB0', alias: ['새마을', 'mg'] },
+  { id: 'cu', name: '신협', short: '신협', color: '#3A7BD5', alias: ['신협', '신용협동'] },
+  { id: 'savings', name: '저축은행', short: '저축', color: '#6B7684', alias: ['저축'] },
+  { id: 'etc', name: '기타 금융기관', short: '기타', color: '#8B95A1', alias: ['기타', '증권', '금융'] },
+];
+const OWN_BANK = { id: 'moa', name: '모아 가상은행', short: 'M', color: '#3182F6' };
+const bankById = id => BANKS.find(b => b.id === id) || (id === 'moa' ? OWN_BANK : null);
+function bankIc(b, size = '') {
+  if (!b) return `<span class="bank-ic empty ${size}">${ICON.bank}</span>`;
+  return `<span class="bank-ic ${size}" style="background:${b.color};color:${b.fg || '#fff'}" aria-hidden="true">${esc(b.short)}</span>`;
+}
+const normQ = s => String(s || '').toLowerCase().replace(/\s+/g, '');
+function filterBanks(q) {
+  const k = normQ(q);
+  if (!k) return BANKS;
+  return BANKS.filter(b => normQ(b.name).includes(k) || (b.alias || []).some(a => normQ(a).includes(k) || k.includes(normQ(a)) && normQ(a).length >= 2));
+}
+
+/* ---------- 상태 ---------- */
+const STORAGE_KEY = 'moa-demo-app/v1';
+const TRANSFER_STATUSES = ['idle', 'recipient', 'amount', 'confirm', 'authorizing', 'processing', 'completed'];
+const TRANSITIONS = {
+  idle: ['recipient'],
+  recipient: ['idle', 'amount'],
+  amount: ['idle', 'recipient', 'confirm'],
+  confirm: ['idle', 'recipient', 'amount', 'authorizing'],
+  authorizing: ['confirm', 'processing'],
+  processing: ['completed', 'confirm'],
+  completed: ['idle'],
+};
+const defaultAccounts = () => [
+  { id: 'acc_living', bankId: 'moa', bankName: OWN_BANK.name, nickname: '생활비 계좌', number: '1002845123456', balance: 3480000, color: '#3182F6' },
+  { id: 'acc_saving', bankId: 'moa', bankName: OWN_BANK.name, nickname: '저축 계좌', number: '3333017788990', balance: 2000000, color: '#7FB3FA' },
+];
+const emptyTransfer = (src = 'acc_living') => ({
+  sourceAccountId: src, recipientBank: null, recipientAccount: '', recipientName: '',
+  recipientNameSource: 'manual', amount: 0, status: 'idle', txId: null,
+});
+const defaultSettings = () => ({ hideBalance: false, notifications: true, points: 1250, attendance: [], missionsClaimed: [], missionFlags: {}, watchlist: ['s4', 's5'], pointHistory: [] });
+const defaultState = () => ({ version: 1, accounts: defaultAccounts(), transactions: [], recipients: [], processedTxIds: [], settings: defaultSettings(), transfer: emptyTransfer() });
+
+const appState = {
+  currentScreen: 'home',
+  currentTab: 'home',
+  ...defaultState(),
+};
+let storageOK = true;
+
+function saveAppState() {
+  if (!storageOK) return;
+  const { version, accounts, transactions, recipients, processedTxIds, settings, transfer } = appState;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version, accounts, transactions, recipients, processedTxIds, settings, transfer, savedAt: Date.now() }));
+  } catch (e) {
+    storageOK = false;
+    toast('이 브라우저에서는 데이터를 저장할 수 없어요. 새로고침하면 초기화돼요.');
+  }
+}
+function sanitizeLoaded(d) {
+  const base = defaultState();
+  if (!d || typeof d !== 'object' || d.version !== 1) throw new Error('version');
+  if (!Array.isArray(d.accounts) || !d.accounts.length) throw new Error('accounts');
+  const accounts = d.accounts.map(a => {
+    if (!a || typeof a.id !== 'string' || !isMoney(a.balance)) throw new Error('account');
+    const def = base.accounts.find(b => b.id === a.id);
+    if (!def) throw new Error('unknown account');
+    return { ...def, balance: a.balance, nickname: typeof a.nickname === 'string' && a.nickname ? a.nickname.slice(0, 20) : def.nickname };
+  });
+  if (!Array.isArray(d.transactions)) throw new Error('transactions');
+  const transactions = d.transactions.filter(t => t && typeof t.id === 'string' && isMoney(t.amount) && isMoney(t.balanceAfter) && Number.isFinite(t.createdAt) && accounts.some(a => a.id === t.accountId))
+    .map(t => ({ ...t, recipientName: String(t.recipientName || '').slice(0, MAX_NAME), recipientAccount: String(t.recipientAccount || '').replace(/\D/g, '').slice(0, ACCT_MAX) }));
+  const recipients = (Array.isArray(d.recipients) ? d.recipients : []).filter(r => r && bankById(r.bankId) && /^\d{6,20}$/.test(String(r.account)) && typeof r.name === 'string' && r.name.trim())
+    .map(r => ({ key: `${r.bankId}:${r.account}`, bankId: r.bankId, account: String(r.account), name: r.name.slice(0, MAX_NAME), nameSource: 'manual', lastAt: Number(r.lastAt) || Date.now(), count: Number(r.count) || 1, favorite: !!r.favorite }));
+  const processedTxIds = [...new Set([...(Array.isArray(d.processedTxIds) ? d.processedTxIds.filter(x => typeof x === 'string') : []), ...transactions.map(t => t.id)])];
+  const s = d.settings && typeof d.settings === 'object' ? d.settings : {};
+  const settings = { ...base.settings };
+  for (const k of Object.keys(settings)) if (s[k] !== undefined && typeof s[k] === typeof settings[k] && Array.isArray(s[k]) === Array.isArray(settings[k])) settings[k] = s[k];
+  if (!isMoney(settings.points)) settings.points = base.settings.points;
+  const tr = d.transfer && typeof d.transfer === 'object' ? d.transfer : {};
+  const transfer = emptyTransfer(accounts.some(a => a.id === tr.sourceAccountId) ? tr.sourceAccountId : 'acc_living');
+  if (bankById(tr.recipientBank) && tr.recipientBank !== 'moa') transfer.recipientBank = tr.recipientBank;
+  if (typeof tr.recipientAccount === 'string') transfer.recipientAccount = tr.recipientAccount.replace(/\D/g, '').slice(0, ACCT_MAX);
+  if (typeof tr.recipientName === 'string') transfer.recipientName = tr.recipientName.slice(0, MAX_NAME);
+  if (isMoney(tr.amount) && tr.amount <= MAX_AMOUNT) transfer.amount = tr.amount;
+  // 앱은 항상 홈에서 시작하므로 진행 중이던 단계는 idle로 되돌린다(잔액은 완료 시점에만 바뀌므로 안전).
+  if (tr.status === 'completed' || (typeof tr.txId === 'string' && processedTxIds.includes(tr.txId))) return { version: 1, accounts, transactions, recipients, processedTxIds, settings, transfer: emptyTransfer(transfer.sourceAccountId) };
+  return { version: 1, accounts, transactions, recipients, processedTxIds, settings, transfer };
+}
+function loadAppState() {
+  let raw = null;
+  try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { storageOK = false; }
+  if (!raw) { Object.assign(appState, defaultState()); return 'new'; }
+  try {
+    Object.assign(appState, sanitizeLoaded(JSON.parse(raw)));
+    return 'ok';
+  } catch (e) {
+    console.warn('[모아] 저장 데이터 손상, 초기화합니다:', e.message);
+    Object.assign(appState, defaultState());
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+    return 'corrupt';
+  }
+}
+function resetAppData() {
+  sheets.slice().forEach(s => s.close('reset'));
+  stack.splice(0).forEach(e => e.el.remove());
+  try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+  Object.assign(appState, defaultState());
+  saveAppState();
+  $$('.tab-view').forEach(v => (v.scrollTop = 0));
+  syncCurrent();
+  switchTab('home', { force: true });
+  toast('앱 데이터를 처음 상태로 초기화했어요');
+}
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+
+const getAccount = id => appState.accounts.find(a => a.id === id);
+const totalAssets = () => appState.accounts.reduce((s, a) => s + a.balance, 0);
+
+/* ---------- 송금 상태 관리 ---------- */
+function setTransferStatus(next) {
+  const t = appState.transfer;
+  if (t.status === next) return true;
+  if (!(TRANSITIONS[t.status] || []).includes(next)) {
+    console.warn(`[모아] 허용되지 않은 송금 상태 전환: ${t.status} → ${next}`);
+    return false;
+  }
+  t.status = next;
+  return true;
+}
+function resetTransfer() {
+  appState.transfer = emptyTransfer(appState.transfer.sourceAccountId || 'acc_living');
+  saveAppState();
+}
+function sanitizeAccount(raw) {
+  let s = String(raw || '').replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0));
+  s = s.replace(/[\s\-–—.·_/]/g, '');
+  const hadInvalid = /\D/.test(s);
+  let digits = s.replace(/\D/g, '');
+  const tooLong = digits.length > ACCT_MAX;
+  if (tooLong) digits = digits.slice(0, ACCT_MAX);
+  return { digits, hadInvalid, tooLong };
+}
+function setRecipientAccount(digits) { appState.transfer.recipientAccount = digits; saveAppState(); }
+function normalizeName(v) { return String(v || '').replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim().slice(0, MAX_NAME); }
+function setRecipientName(v) {
+  appState.transfer.recipientName = normalizeName(v);
+  appState.transfer.recipientNameSource = 'manual';
+  saveAppState();
+}
+function selectBank(id) {
+  if (!BANKS.some(b => b.id === id)) return;
+  appState.transfer.recipientBank = id; // 계좌번호는 그대로 유지
+  saveAppState();
+}
+function setTransferAmount(n) {
+  n = Math.floor(Number(n) || 0);
+  appState.transfer.amount = Math.max(0, Math.min(MAX_AMOUNT, n));
+  saveAppState();
+}
+function validateTransfer(stage = 'all') {
+  const t = appState.transfer;
+  if (!bankById(t.recipientBank) || t.recipientBank === 'moa') return { ok: false, field: 'bank', message: '받는 은행을 선택해주세요' };
+  if (!t.recipientAccount) return { ok: false, field: 'account', message: '계좌번호를 입력해주세요' };
+  if (!/^\d+$/.test(t.recipientAccount)) return { ok: false, field: 'account', message: '계좌번호는 숫자만 입력할 수 있어요' };
+  if (t.recipientAccount.length < ACCT_MIN || t.recipientAccount.length > ACCT_MAX) return { ok: false, field: 'account', message: `계좌번호를 다시 확인해주세요 (${ACCT_MIN}~${ACCT_MAX}자리 숫자)` };
+  if (!normalizeName(t.recipientName)) return { ok: false, field: 'name', message: '받는 사람 이름을 입력해주세요' };
+  if (stage === 'recipient') return { ok: true };
+  const acc = getAccount(t.sourceAccountId);
+  if (!acc) return { ok: false, field: 'source', message: '출금 계좌를 선택해주세요' };
+  if (!Number.isSafeInteger(t.amount) || t.amount <= 0) return { ok: false, field: 'amount', message: '보낼 금액을 입력해주세요' };
+  if (t.amount > acc.balance) return { ok: false, field: 'amount', message: `잔액이 부족해요 · 최대 ${won(acc.balance)}` };
+  return { ok: true };
+}
+
+/* ---------- 수취인 / 즐겨찾기 ---------- */
+function upsertRecipient(tx) {
+  const key = `${tx.bankId}:${tx.recipientAccount}`;
+  const list = appState.recipients;
+  const i = list.findIndex(r => r.key === key);
+  const prev = i >= 0 ? list.splice(i, 1)[0] : null;
+  list.unshift({ key, bankId: tx.bankId, account: tx.recipientAccount, name: tx.recipientName, nameSource: 'manual', lastAt: tx.createdAt, count: (prev?.count || 0) + 1, favorite: prev?.favorite || false });
+  // 즐겨찾기가 아닌 오래된 수취인은 30개까지만 보관
+  let nonFav = 0;
+  appState.recipients = list.filter(r => r.favorite || ++nonFav <= 30);
+}
+const findRecipient = key => appState.recipients.find(r => r.key === key);
+
+/* ---------- 토스트 ---------- */
+let toastTimer = null;
+function toast(msg, ms = 2200) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.toggle('high', stack.length > 0);
+  el.classList.toggle('top', sheets.length > 0);
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), ms);
+}
+
+/* ---------- 바텀시트 ---------- */
+const sheets = [];
+function openSheet({ title = '', sub = '', body = '', foot = '', tall = false, flush = false, onMount, onClose, dismissible = true } = {}) {
+  const wrap = document.createElement('div');
+  wrap.className = 'sheet-wrap';
+  wrap.innerHTML = `<div class="sheet-dim"></div>
+    <div class="sheet ${tall ? 'tall' : ''}" role="dialog" aria-modal="true" ${title ? `aria-label="${esc(title.replace(/<[^>]+>/g, ''))}"` : ''}>
+      <div class="grabber"></div>
+      ${title ? `<div class="sheet-head"><h2 class="sheet-title">${title}</h2>${sub ? `<p class="sheet-sub">${sub}</p>` : ''}</div>` : ''}
+      <div class="sheet-body ${flush ? 'flush' : ''}">${body}</div>
+      ${foot ? `<div class="sheet-foot">${foot}</div>` : ''}
+    </div>`;
+  $('#sheetLayer').appendChild(wrap);
+  const api = {
+    el: wrap, closed: false, dismissible,
+    close(reason = 'cancel') {
+      if (api.closed) return;
+      api.closed = true;
+      wrap.classList.remove('open');
+      wrap.style.pointerEvents = 'none';
+      const i = sheets.indexOf(api);
+      if (i >= 0) sheets.splice(i, 1);
+      setTimeout(() => wrap.remove(), 300);
+      if (document.activeElement && wrap.contains(document.activeElement)) document.activeElement.blur();
+      onClose && onClose(reason);
+    },
+  };
+  wrap.querySelector('.sheet-dim').addEventListener('click', () => { if (api.dismissible) api.close('dim'); });
+  sheets.push(api);
+  wrap.getBoundingClientRect();
+  wrap.classList.add('open');
+  onMount && onMount(wrap.querySelector('.sheet'), api);
+  return api;
+}
+const sheetOf = el => sheets.find(s => s.el === el.closest('.sheet-wrap'));
+function infoSheet(title, msg, btn = '확인') {
+  return openSheet({ title, sub: msg, foot: `<button class="btn btn-primary" data-act="sheetClose">${esc(btn)}</button>` });
+}
+function confirmSheet({ title, sub, ok = '확인', cancel = '취소', danger = false, onOk }) {
+  return openSheet({
+    title, sub,
+    foot: `<div class="btn-row"><button class="btn btn-gray" data-act="sheetClose">${esc(cancel)}</button><button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-role="ok">${esc(ok)}</button></div>`,
+    onMount(sh, api) { sh.querySelector('[data-role=ok]').addEventListener('click', () => { api.close('ok'); onOk && onOk(); }, { once: true }); },
+  });
+}
+
+/* ---------- 화면 스택 내비게이션 ---------- */
+const stack = [];
+let navLock = false;
+const ANIM = 240;
+function lockNav(ms = ANIM + 30) { navLock = true; clearTimeout(lockNav.t); lockNav.t = setTimeout(() => (navLock = false), ms); }
+function appbar({ title = '', back = true, close = false, right = '' } = {}) {
+  return `<header class="appbar">
+    ${back ? `<button class="icon-btn" data-act="back" aria-label="뒤로 가기">${ICON.back}</button>` : close ? `<button class="icon-btn" data-act="closeFlow" aria-label="닫기">${ICON.close}</button>` : '<span style="width:12px"></span>'}
+    <div class="title">${title}</div>${right}<span class="demo-chip">체험용</span><span style="width:8px"></span>
+  </header>`;
+}
+function buildScreen(name, params = {}) {
+  const def = SCREENS[name];
+  const el = document.createElement('section');
+  el.className = 'screen' + (def.white ? ' white' : '');
+  el.dataset.screen = name;
+  const entry = { name, params: { ...params }, el, def };
+  paint(entry, false);
+  return entry;
+}
+function paint(entry, keepScroll = true) {
+  const oldBody = entry.el.querySelector('.screen-body');
+  const st = oldBody ? oldBody.scrollTop : 0;
+  entry.el.innerHTML = entry.def.render(entry);
+  const nb = entry.el.querySelector('.screen-body');
+  if (nb && keepScroll) nb.scrollTop = st;
+  entry.def.mount && entry.def.mount(entry);
+}
+function repaintTop(name) { const top = stack[stack.length - 1]; if (top && (!name || top.name === name)) paint(top); }
+function navigateTo(name, params = {}, opts = {}) {
+  if (navLock && !opts.force) return false;
+  const def = SCREENS[name];
+  if (!def) return false;
+  if (def.status && !setTransferStatus(def.status)) return false;
+  lockNav();
+  const entry = buildScreen(name, params);
+  const prev = stack[stack.length - 1];
+  const stackEl = $('#stack');
+  if (opts.replaceAll) {
+    entry.el.classList.add('fade-enter');
+    stackEl.appendChild(entry.el);
+    entry.el.getBoundingClientRect();
+    entry.el.classList.remove('fade-enter');
+    const old = stack.splice(0);
+    old.forEach(o => (o.el.inert = true));
+    setTimeout(() => old.forEach(o => o.el.remove()), ANIM);
+  } else {
+    entry.el.classList.add('offright');
+    stackEl.appendChild(entry.el);
+    entry.el.getBoundingClientRect();
+    entry.el.classList.remove('offright');
+    if (prev) { prev.el.classList.add('under'); prev.el.inert = true; }
+  }
+  stack.push(entry);
+  syncCurrent();
+  saveAppState();
+  def.onEnter && def.onEnter(entry);
+  return true;
+}
+function popScreen() {
+  lockNav();
+  const top = stack.pop();
+  top.el.inert = true;
+  top.el.classList.add('offright');
+  setTimeout(() => top.el.remove(), ANIM + 20);
+  top.def.onLeave && top.def.onLeave(top);
+  const prev = stack[stack.length - 1];
+  if (prev) {
+    if (prev.def.status) setTransferStatus(prev.def.status);
+    prev.el.classList.remove('under');
+    prev.el.inert = false;
+    paint(prev);
+  } else {
+    if (['recipient', 'amount', 'confirm'].includes(appState.transfer.status)) setTransferStatus('idle');
+    renderTab(appState.currentTab);
+  }
+  saveAppState();
+  syncCurrent();
+}
+function goBack() {
+  if (sheets.length) { const s = sheets[sheets.length - 1]; if (s.dismissible) s.close('back'); return; }
+  if (navLock) return;
+  const top = stack[stack.length - 1];
+  if (!top) return;
+  if (top.def.noBack) { top.def.onBackBlocked && top.def.onBackBlocked(top); return; }
+  popScreen();
+}
+function popTo(name) {
+  if (navLock) return false;
+  const idx = stack.map(s => s.name).lastIndexOf(name);
+  if (idx < 0 || idx === stack.length - 1) return false;
+  const middle = stack.splice(idx + 1, stack.length - idx - 2);
+  middle.forEach(m => m.el.remove());
+  popScreen();
+  return true;
+}
+function clearStack() {
+  if (['recipient', 'amount', 'confirm', 'authorizing'].includes(appState.transfer.status)) appState.transfer.status = 'idle';
+  const all = stack.splice(0);
+  if (!all.length) return;
+  const top = all[all.length - 1];
+  all.slice(0, -1).forEach(e => e.el.remove());
+  top.el.inert = true;
+  top.el.classList.add('fade-out');
+  setTimeout(() => top.el.remove(), ANIM);
+  lockNav();
+  syncCurrent();
+}
+function resetToTab(tab) { clearStack(); switchTab(tab, { force: true }); }
+function syncCurrent() {
+  const top = stack[stack.length - 1];
+  appState.currentScreen = top ? top.name : appState.currentTab;
+  $('#tabs').inert = !!top;
+  $('#bottomNav').inert = !!top;
+}
+
+/* ---------- 탭 ---------- */
+const TABS = [
+  { id: 'home', label: '홈', icon: 'home' },
+  { id: 'benefit', label: '혜택', icon: 'gift' },
+  { id: 'transfer', label: '송금', icon: 'send' },
+  { id: 'stock', label: '주식', icon: 'stock' },
+  { id: 'more', label: '전체', icon: 'menu' },
+];
+function renderNav() {
+  $('#bottomNav').innerHTML = TABS.map(t => `<button class="nav-item ${t.id === appState.currentTab ? 'active' : ''}" data-act="tab" data-tab="${t.id}" aria-label="${t.label}" ${t.id === appState.currentTab ? 'aria-current="page"' : ''}>${ICON[t.icon]}<span>${t.label}</span></button>`).join('');
+}
+function renderTab(id) {
+  const view = $(`#tab-${id}`);
+  if (!view) return;
+  const st = view.scrollTop;
+  view.innerHTML = TAB_RENDER[id]();
+  view.scrollTop = st;
+}
+function switchTab(id, { force = false } = {}) {
+  if (!TABS.some(t => t.id === id)) return;
+  const same = appState.currentTab === id;
+  if (same && !force) { $(`#tab-${id}`).scrollTo({ top: 0, behavior: 'smooth' }); return; }
+  appState.currentTab = id;
+  $$('.tab-view').forEach(v => v.classList.toggle('active', v.id === `tab-${id}`));
+  renderTab(id);
+  renderNav();
+  if (id === 'stock') flagMission('stock');
+  syncCurrent();
+}
+
+/* ---------- 홈 ---------- */
+const SERVICES = [
+  { key: 'card', label: '카드', icon: 'card', color: '#3182F6', bg: '#E8F3FF' },
+  { key: 'analysis', label: '소비 분석', icon: 'pie', color: '#7B61FF', bg: '#F0EDFF' },
+  { key: 'loan', label: '대출', icon: 'loan', color: '#03B26C', bg: '#E5F8EF' },
+  { key: 'credit', label: '신용점수', icon: 'gauge', color: '#F08A24', bg: '#FFF2E5' },
+  { key: 'insurance', label: '보험', icon: 'shield', color: '#14A3B8', bg: '#E4F6F8' },
+  { key: 'invest', label: '투자', icon: 'trend', color: '#F04452', bg: '#FFEEF0' },
+  { key: 'spend', label: '이번 달 지출', icon: 'receipt', color: '#4E5968', bg: '#F2F4F6' },
+  { key: 'recommend', label: '금융 추천', icon: 'spark', color: '#3182F6', bg: '#E8F3FF' },
+  { key: 'event', label: '이벤트', icon: 'ticket', color: '#E5508E', bg: '#FDEDF4' },
+  { key: 'point', label: '포인트', icon: 'point', color: '#E8A400', bg: '#FFF6DB' },
+];
+const svcIc = s => `<span class="ic-circle" style="background:${s.bg};color:${s.color}">${ICON[s.icon]}</span>`;
+const monthTx = () => { const now = new Date(); return appState.transactions.filter(t => { const d = new Date(t.createdAt); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); }); };
+const SAMPLE_CARD_SPEND = 642300;
+function accountRow(a, hide) {
+  return `<div class="acc-row row-tap" data-act="openAccount" data-id="${a.id}" role="button" tabindex="0">
+    ${bankIc(OWN_BANK)}
+    <div class="acc-main">
+      <div class="acc-name">${esc(a.nickname)}</div>
+      <div class="acc-bal num">${hide ? '잔액 숨김' : won(a.balance)}</div>
+      <div class="acc-meta">${esc(a.bankName)} · ${maskAccount(a.number)}</div>
+    </div>
+    <button class="mini-btn" data-act="startTransfer" data-id="${a.id}">송금</button>
+  </div>`;
+}
+function renderHome() {
+  const hide = appState.settings.hideBalance, total = totalAssets();
+  const mt = monthTx(), mSum = mt.reduce((s, t) => s + t.amount, 0);
+  const bar = appState.accounts.map(a => `<span style="width:${total ? (a.balance / total * 100).toFixed(2) : 0}%;background:${a.color}"></span>`).join('');
+  return `
+  <header class="topbar">
+    <div class="brand">${LOGO}<b>모아</b><span class="demo-chip">체험용 앱</span></div>
+    <div class="top-actions">
+      <button class="icon-btn" data-act="profile" aria-label="내 정보">${ICON.user}</button>
+      <button class="icon-btn" data-act="notifications" aria-label="알림">${ICON.bell}</button>
+      <button class="icon-btn" data-act="settings" aria-label="설정">${ICON.gear}</button>
+    </div>
+  </header>
+  <section class="card asset-card tap" data-act="assetSheet" role="button" tabindex="0">
+    <div class="label">총자산 <span class="tag">가상</span></div>
+    <div class="big num">${hide ? '잔액 숨김' : won(total)}</div>
+    <div class="sub">연결된 가상 계좌 ${appState.accounts.length}개의 합계예요</div>
+    <div class="asset-bar">${bar}</div>
+    <div class="asset-legend">${appState.accounts.map(a => `<span><i style="background:${a.color}"></i>${esc(a.nickname)}</span>`).join('')}</div>
+  </section>
+  <section class="card flush">
+    <div class="card-title" style="padding:16px 20px 6px">내 계좌 <span class="tag">가상 계좌</span></div>
+    ${appState.accounts.map(a => accountRow(a, hide)).join('')}
+  </section>
+  <section class="card">
+    <div class="card-title">금융 서비스</div>
+    <div class="svc-grid">${SERVICES.map(s => `<button class="svc" data-act="service" data-key="${s.key}">${svcIc(s)}<span>${s.label}</span></button>`).join('')}</div>
+  </section>
+  <section class="card tap" data-act="service" data-key="spend" role="button" tabindex="0">
+    <div class="spend-mini">
+      <span class="ic-circle" style="background:#F2F4F6;color:#4E5968">${ICON.receipt}</span>
+      <div style="flex:1;min-width:0"><div class="muted small">${new Date().getMonth() + 1}월 모의 송금</div><div class="v num">${won(mSum)}</div></div>
+      <span class="chev">${ICON.chevR}</span>
+    </div>
+  </section>
+  <button class="banner tap" data-act="startTransfer" data-id="acc_living">
+    <span class="ic-circle" style="background:#E8F3FF;color:#3182F6">${ICON.send}</span>
+    <div style="flex:1"><div class="t">모의 송금 체험해보기</div><div class="s">실제 돈은 이동하지 않아요</div></div>
+    <span class="chev">${ICON.chevR}</span>
+  </button>
+  <p class="foot-note">모아는 금융 앱 UI를 체험하기 위한 데모예요.<br>실제 은행·금융 서비스와 연결되지 않으며, 모든 금액과 거래는 가상 데이터예요.</p>`;
+}
+
+/* ---------- 송금 탭 ---------- */
+function recipientRow(r, showMore = true) {
+  const b = bankById(r.bankId);
+  return `<div class="list-row row-tap" data-act="pickRecipient" data-key="${esc(r.key)}" role="button" tabindex="0">
+    ${bankIc(b)}
+    <div class="lr-main">
+      <div class="lr-title">${esc(r.name)}</div>
+      <div class="lr-sub">${esc(b ? b.name : '')} ${maskAccount(r.account)}</div>
+      <div class="lr-sub2">${fmtRelDay(r.lastAt)} ${fmtTime(r.lastAt)} 모의 송금${r.count > 1 ? ` · ${r.count}회` : ''}</div>
+    </div>
+    <button class="icon-btn sm star-btn ${r.favorite ? 'on' : ''}" data-act="toggleFav" data-key="${esc(r.key)}" aria-label="${r.favorite ? '즐겨찾기 해제' : '즐겨찾기 등록'}">${ICON.star}</button>
+    ${showMore ? `<button class="icon-btn sm" style="color:#B0B8C1" data-act="recipMore" data-key="${esc(r.key)}" aria-label="더보기">${ICON.more}</button>` : ''}
+  </div>`;
+}
+function recipientLists() {
+  const favs = appState.recipients.filter(r => r.favorite);
+  const recents = [...appState.recipients].sort((a, b) => b.lastAt - a.lastAt);
+  return `
+  ${favs.length ? `<div class="ls"><div class="ls-title">${ICON.star.replace('<svg', '<svg style="width:15px;height:15px;color:#FFC342;fill:#FFC342"')}즐겨찾기</div>${favs.map(r => recipientRow(r)).join('')}</div>` : ''}
+  <div class="ls"><div class="ls-title">최근 보낸 계좌</div>
+    ${recents.length ? recents.map(r => recipientRow(r)).join('') : `<div class="empty-state"><div class="ei">${ICON.send}</div><b>최근 보낸 계좌가 없어요</b>모의 송금을 완료하면 여기에 보여드릴게요</div>`}
+  </div>`;
+}
+function renderTransferTab() {
+  const mt = monthTx(), mSum = mt.reduce((s, t) => s + t.amount, 0);
+  const hide = appState.settings.hideBalance;
+  return `
+  <header class="topbar"><div class="page-title">송금</div><span class="demo-chip">체험용</span><span style="width:10px"></span></header>
+  <button class="banner tap" data-act="startTransfer" data-id="${appState.transfer.sourceAccountId}" style="padding:22px 20px">
+    <span class="ic-circle" style="background:#3182F6;color:#fff;width:48px;height:48px;border-radius:16px">${ICON.send}</span>
+    <div style="flex:1"><div class="t" style="font-size:17px">계좌번호로 모의 송금</div><div class="s">은행과 계좌번호, 받는 사람 이름을 직접 입력해요</div></div>
+    <span class="chev">${ICON.chevR}</span>
+  </button>
+  <section class="card flush">
+    <div class="card-title" style="padding:16px 20px 6px">출금할 수 있는 가상 계좌</div>
+    ${appState.accounts.map(a => accountRow(a, hide)).join('')}
+  </section>
+  <section class="card">
+    <div class="spend-mini">
+      <span class="ic-circle" style="background:#F2F4F6;color:#4E5968">${ICON.receipt}</span>
+      <div style="flex:1"><div class="muted small">이번 달 모의 송금 ${mt.length}건</div><div class="v num">${won(mSum)}</div></div>
+    </div>
+  </section>
+  <section class="card flush" style="padding-bottom:4px">${recipientLists().replace(/class="ls"/g, 'class="ls" style="margin-top:12px"')}</section>
+  <p class="foot-note">입력한 계좌번호와 이름은 실제 은행에서 확인하지 않으며,<br>이 기기에만 저장돼요.</p>`;
+}
+
+/* ---------- 혜택 탭 ---------- */
+const MISSIONS = [
+  { id: 'transfer', title: '모의 송금 1번 해보기', reward: 50, done: () => appState.transactions.length > 0, go: 'startTransfer' },
+  { id: 'attend', title: '오늘 출석체크 하기', reward: 10, done: () => appState.settings.attendance.includes(dateKey()), go: 'attend' },
+  { id: 'stock', title: '주식 탭 둘러보기', reward: 20, done: () => !!appState.settings.missionFlags.stock, go: 'tabStock' },
+  { id: 'analysis', title: '소비 분석 확인하기', reward: 20, done: () => !!appState.settings.missionFlags.analysis, go: 'analysis' },
+];
+function flagMission(k) { if (!appState.settings.missionFlags[k]) { appState.settings.missionFlags[k] = true; saveAppState(); } }
+function addPoints(n, reason) {
+  appState.settings.points += n;
+  appState.settings.pointHistory.unshift({ n, reason, at: Date.now() });
+  appState.settings.pointHistory = appState.settings.pointHistory.slice(0, 30);
+  saveAppState();
+}
+function weekDays() {
+  const now = new Date(), dow = (now.getDay() + 6) % 7, start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dow);
+  return Array.from({ length: 7 }, (_, i) => { const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i); return { key: dateKey(d.getTime()), label: '월화수목금토일'[i], today: i === dow }; });
+}
+function renderBenefit() {
+  const s = appState.settings, attended = s.attendance.includes(dateKey());
+  const days = weekDays();
+  return `
+  <header class="topbar"><div class="page-title">혜택</div><span class="demo-chip">체험용</span><span style="width:10px"></span></header>
+  <section class="card point-card tap" data-act="service" data-key="point" role="button" tabindex="0">
+    <div class="muted" style="font-size:15px;display:flex;align-items:center;gap:6px">내 체험 포인트 <span class="tag">가상</span></div>
+    <div class="pv num">${comma(s.points)}P</div>
+    <div class="muted small" style="margin-top:2px">현금으로 바꿀 수 없는 체험용 포인트예요</div>
+  </section>
+  <section class="card">
+    <div class="card-title">출석체크 <span class="more">${days.filter(d => s.attendance.includes(d.key)).length}/7일</span></div>
+    <div class="week">${days.map(d => `<div class="day ${s.attendance.includes(d.key) ? 'on' : ''} ${d.today ? 'today' : ''}"><i>${ICON.check}</i>${d.label}</div>`).join('')}</div>
+    <button class="btn btn-md ${attended ? 'btn-gray' : 'btn-primary'}" data-act="attend" ${attended ? 'disabled' : ''}>${attended ? '오늘 출석 완료' : '출석체크하고 10P 받기'}</button>
+  </section>
+  <section class="card event-card tap" data-act="demoInfo" data-title="오늘의 이벤트" data-msg="체험용 이벤트예요. 실제 경품이나 혜택은 지급되지 않아요." role="button" tabindex="0">
+    <div style="flex:1"><div class="muted small">오늘의 이벤트</div><div class="t">행운 상자를 열고<br>체험 포인트 받기</div><div class="s">하루 한 번 참여할 수 있어요</div></div>
+    <span class="event-art" style="background:#FDEDF4;color:#E5508E">${ICON.gift}</span>
+  </section>
+  <section class="card flush">
+    <div class="card-title" style="padding:16px 20px 4px">미션</div>
+    ${MISSIONS.map(m => {
+      const claimed = s.missionsClaimed.includes(m.id), done = m.done();
+      return `<div class="mission">
+        <span class="ic-circle" style="background:${claimed ? '#F2F4F6' : '#E8F3FF'};color:${claimed ? '#B0B8C1' : '#3182F6'}">${ICON.target}</span>
+        <div class="lr-main"><div class="lr-title" ${claimed ? 'style="color:#B0B8C1"' : ''}>${m.title}</div><div class="lr-sub">+${m.reward}P</div></div>
+        ${claimed ? '<span class="tag">완료</span>' : done ? `<button class="mini-btn blue" data-act="claimMission" data-id="${m.id}">받기</button>` : `<button class="mini-btn" data-act="${m.go}" data-id="acc_living" data-key="${m.go === 'analysis' ? 'analysis' : ''}">하러 가기</button>`}
+      </div>`;
+    }).join('')}
+  </section>
+  <section class="card tap" data-act="demoInfo" data-title="캐시백 이벤트" data-msg="체험용 화면이에요. 실제 캐시백은 지급되지 않으며, 카드 결제와도 연결되지 않아요." role="button" tabindex="0">
+    <div class="event-card"><span class="event-art" style="background:#E5F8EF;color:#03B26C;width:52px;height:52px;border-radius:16px">${ICON.coin}</span>
+    <div style="flex:1"><div class="t" style="font-size:16px">편의점 결제 시 5% 캐시백</div><div class="s">체험 이벤트 · 이번 달 말까지</div></div><span class="chev">${ICON.chevR}</span></div>
+  </section>
+  <section class="card">
+    <div class="card-title">포인트 적립 안내</div>
+    <dl class="info-list" style="margin-top:8px">
+      <div class="info-row"><dt>출석체크</dt><dd>하루 10P</dd></div>
+      <div class="info-row"><dt>미션 완료</dt><dd>미션별 10~50P</dd></div>
+      <div class="info-row"><dt>유효기간</dt><dd>앱 데이터 초기화 전까지</dd></div>
+    </dl>
+    <p class="muted small" style="margin-top:8px">모든 포인트는 체험용이며 실제 가치가 없어요.</p>
+  </section>`;
+}
+
+/* ---------- 주식 탭 (샘플 데이터) ---------- */
+const STOCKS = [
+  { id: 's1', name: '한빛전자', sector: '반도체', price: 72300, chg: 1.83, color: '#3182F6' },
+  { id: 's2', name: '누리바이오', sector: '바이오', price: 113500, chg: -2.41, color: '#14A3B8' },
+  { id: 's3', name: '새솔모빌리티', sector: '자동차', price: 21900, chg: 3.12, color: '#4E5968' },
+  { id: 's4', name: '다온에너지', sector: '2차전지', price: 48650, chg: 0.62, color: '#03B26C' },
+  { id: 's5', name: '하람소프트', sector: '소프트웨어', price: 156000, chg: -0.95, color: '#7B61FF' },
+  { id: 's6', name: '온결푸드', sector: '식품', price: 33200, chg: 0.3, color: '#F08A24' },
+  { id: 's7', name: '별빛엔터', sector: '엔터테인먼트', price: 27450, chg: 4.88, color: '#E5508E' },
+];
+const HOLDINGS = [{ id: 's1', qty: 12, avg: 68400 }, { id: 's2', qty: 5, avg: 121000 }, { id: 's3', qty: 20, avg: 18450 }];
+const INDICES = [{ n: '종합지수', v: '2,684.15', c: 0.74 }, { n: '성장지수', v: '871.42', c: -0.38 }, { n: '해외 기술지수', v: '18,342.90', c: 1.12 }];
+const stockById = id => STOCKS.find(s => s.id === id);
+function seeded(seed) {
+  let h = 2166136261;
+  for (const c of seed) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return () => { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 10000) / 10000; };
+}
+function sparkPoints(seed, up, n = 28) {
+  const r = seeded(seed); let v = 0.5; const pts = [];
+  for (let i = 0; i < n; i++) { v += (r() - 0.5) * 0.2 + (up ? 0.014 : -0.014); v = Math.min(0.97, Math.max(0.03, v)); pts.push(v); }
+  return pts;
+}
+function sparkSvg(seed, up, { w = 120, h = 30, area = false, n = 28 } = {}) {
+  const pts = sparkPoints(seed, up, n), min = Math.min(...pts), max = Math.max(...pts), rng = max - min || 1;
+  const xy = pts.map((p, i) => [(i / (n - 1)) * w, h - ((p - min) / rng) * h * 0.86 - h * 0.07]);
+  const d = xy.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+  const col = up ? 'var(--up)' : 'var(--down)';
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" class="${area ? '' : 'spark'}" aria-hidden="true">
+    ${area ? `<path d="${d} L${w} ${h} L0 ${h} Z" fill="${up ? 'rgba(240,68,82,.08)' : 'rgba(49,130,246,.08)'}"/>` : ''}
+    <path d="${d}" fill="none" stroke="${col}" stroke-width="${area ? 2 : 1.6}" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+const chgTxt = c => `${c > 0 ? '+' : ''}${c.toFixed(2)}%`;
+function stockRow(s, i) {
+  return `<div class="list-row row-tap stock-row" data-act="openStock" data-id="${s.id}" role="button" tabindex="0">
+    ${i != null ? `<span class="rank">${i + 1}</span>` : ''}
+    <span class="stock-logo" style="background:${s.color}">${esc(s.name[0])}</span>
+    <div class="lr-main"><div class="lr-title">${esc(s.name)}</div><div class="lr-sub">${esc(s.sector)} · 샘플</div></div>
+    <div class="lr-right"><div class="v">${won(s.price)}</div><div class="c ${s.chg >= 0 ? 'up' : 'down'}">${chgTxt(s.chg)}</div></div>
+  </div>`;
+}
+function renderStock() {
+  const evalSum = HOLDINGS.reduce((s, h) => s + stockById(h.id).price * h.qty, 0);
+  const cost = HOLDINGS.reduce((s, h) => s + h.avg * h.qty, 0);
+  const pl = evalSum - cost, rate = cost ? (pl / cost) * 100 : 0;
+  const watch = appState.settings.watchlist.map(stockById).filter(Boolean);
+  return `
+  <header class="topbar"><div class="page-title">주식</div><span class="demo-chip">샘플 데이터</span><span style="width:10px"></span></header>
+  <div class="idx-row">${INDICES.map(x => `<div class="idx"><div class="n">${x.n} <span class="tag">샘플</span></div><div class="v">${x.v}</div><div class="c ${x.c >= 0 ? 'up' : 'down'}">${chgTxt(x.c)}</div>${sparkSvg(x.n, x.c >= 0)}</div>`).join('')}</div>
+  <section class="card">
+    <div class="muted" style="font-size:15px">가상 보유 주식 평가금</div>
+    <div style="font-size:28px;font-weight:700;letter-spacing:-.03em" class="num">${won(evalSum)}</div>
+    <div class="num ${pl >= 0 ? 'up' : 'down'}" style="font-size:15px;font-weight:600;margin-top:2px">${pl >= 0 ? '+' : ''}${comma(pl)}원 (${chgTxt(rate)})</div>
+    <p class="muted small" style="margin-top:10px">가격과 수익률은 실제 시세가 아닌 샘플 데이터예요.</p>
+  </section>
+  <section class="card flush">
+    <div class="card-title" style="padding:16px 20px 4px">보유 종목</div>
+    ${HOLDINGS.map(h => { const s = stockById(h.id), r = ((s.price - h.avg) / h.avg) * 100; return `<div class="list-row row-tap stock-row" data-act="openStock" data-id="${s.id}" role="button" tabindex="0">
+      <span class="stock-logo" style="background:${s.color}">${esc(s.name[0])}</span>
+      <div class="lr-main"><div class="lr-title">${esc(s.name)}</div><div class="lr-sub">${h.qty}주 · 평균 ${won(h.avg)}</div></div>
+      <div class="lr-right"><div class="v">${won(s.price * h.qty)}</div><div class="c ${r >= 0 ? 'up' : 'down'}">${chgTxt(r)}</div></div></div>`; }).join('')}
+  </section>
+  <section class="card flush">
+    <div class="card-title" style="padding:16px 20px 4px">관심 종목</div>
+    ${watch.length ? watch.map(s => stockRow(s)).join('') : `<div class="empty-state" style="padding:24px"><b>관심 종목이 없어요</b>종목을 눌러 관심 종목에 추가해보세요</div>`}
+  </section>
+  <section class="card flush">
+    <div class="card-title" style="padding:16px 20px 4px">실시간 인기 종목 <span class="tag">샘플</span></div>
+    ${[...STOCKS].sort((a, b) => Math.abs(b.chg) - Math.abs(a.chg)).slice(0, 5).map((s, i) => stockRow(s, i)).join('')}
+  </section>
+  <p class="foot-note">모든 주식 정보는 가상의 샘플이며 투자 권유가 아니에요.<br>실제 주문 기능은 제공하지 않아요.</p>`;
+}
+
+/* ---------- 전체 탭 ---------- */
+function menuItem(act, icon, label, { color = '#4E5968', bg = '#F2F4F6', extra = '', danger = false, key = '' } = {}) {
+  return `<button class="menu-item row-tap ${danger ? 'danger' : ''}" data-act="${act}" ${key ? `data-key="${key}"` : ''} data-id="acc_living"><span class="ic-circle" style="background:${bg};color:${color}">${ICON[icon]}</span><span class="lbl">${label}</span>${extra}<span class="chev">${ICON.chevR}</span></button>`;
+}
+function renderMore() {
+  return `
+  <header class="topbar"><div class="page-title">전체</div><span class="demo-chip">체험용</span><span style="width:10px"></span></header>
+  <section class="card tap" data-act="profile" role="button" tabindex="0">
+    <div class="profile-row"><span class="avatar-lg">${ICON.user}</span>
+      <div style="flex:1"><div style="font-size:18px;font-weight:700">체험 사용자</div><div class="muted small">가상 프로필 · 개인정보를 수집하지 않아요</div></div><span class="chev">${ICON.chevR}</span></div>
+  </section>
+  <div class="menu-group"><div class="g-title">금융</div>
+    ${menuItem('openAccount', 'bank', '내 가상 계좌')}
+    ${menuItem('startTransfer', 'send', '모의 송금', { color: '#3182F6', bg: '#E8F3FF' })}
+    ${menuItem('service', 'card', '카드', { key: 'card' })}
+    ${menuItem('tabStock', 'trend', '투자')}
+    ${menuItem('service', 'shield', '보험', { key: 'insurance' })}
+    ${menuItem('tabBenefit', 'gift', '혜택')}
+  </div>
+  <div class="menu-group"><div class="g-title">앱</div>
+    ${menuItem('settings', 'gear', '설정')}
+    ${menuItem('support', 'headset', '고객지원 안내')}
+    ${menuItem('about', 'info', '앱 정보')}
+    ${menuItem('resetData', 'reset', '앱 데이터 초기화', { danger: true, color: '#F04452', bg: '#FFEEF0' })}
+  </div>
+  <p class="foot-note">모아 체험판 v1.0 · 모든 데이터는 이 기기에만 저장돼요</p>`;
+}
+const TAB_RENDER = { home: renderHome, benefit: renderBenefit, transfer: renderTransferTab, stock: renderStock, more: renderMore };
+
+/* ---------- 서비스 체험 화면 ---------- */
+const bars = items => { const max = Math.max(...items.map(i => i.v), 1); return `<div class="bars">${items.map(i => `<div class="bar-line"><div class="bl-top"><b>${i.n}</b><span class="num">${won(i.v)}</span></div><div class="bar-track"><div class="bar-fill" style="width:${(i.v / max) * 100}%;background:${i.c}"></div></div></div>`).join('')}</div>`; };
+const SERVICE_PAGES = {
+  card: () => `
+    <section class="card"><div class="vcard"><div class="vt"><span>모아 체크카드</span><span class="tag" style="background:rgba(255,255,255,.18);color:#fff">가상</span></div><div class="vn">0000 •••• •••• 2026</div><div class="vt"><span style="font-weight:500;opacity:.8">체험 사용자</span><span>DEMO</span></div></div></section>
+    <section class="card"><div class="card-title">이번 달 이용 금액 <span class="tag">샘플</span></div><div style="font-size:26px;font-weight:700;margin-top:6px" class="num">${won(SAMPLE_CARD_SPEND)}</div>
+      <dl class="info-list" style="margin-top:10px"><div class="info-row"><dt>결제 예정일</dt><dd>다음 달 14일</dd></div><div class="info-row"><dt>받은 혜택</dt><dd>12,480원 (샘플)</dd></div></dl></section>
+    <div style="padding:4px 12px"><button class="btn btn-secondary" data-act="demoInfo" data-title="카드 신청" data-msg="체험판에서는 실제 카드를 신청하거나 발급할 수 없어요.">새 카드 둘러보기</button></div>`,
+  analysis: () => {
+    const demo = monthTx().reduce((s, t) => s + t.amount, 0);
+    const items = [{ n: '식비', v: 238400, c: '#3182F6' }, { n: '쇼핑', v: 156000, c: '#7B61FF' }, { n: '생활', v: 98700, c: '#14A3B8' }, { n: '교통', v: 84200, c: '#03B26C' }, { n: '카페·간식', v: 65000, c: '#F08A24' }];
+    if (demo) items.push({ n: '모의 송금', v: demo, c: '#8B95A1' });
+    items.sort((a, b) => b.v - a.v);
+    return `<section class="card"><div class="muted">${new Date().getMonth() + 1}월 소비</div><div style="font-size:26px;font-weight:700" class="num">${won(items.reduce((s, i) => s + i.v, 0))}</div>
+      <p class="muted small">카드 사용액은 샘플이며, 모의 송금은 이 앱의 가상 거래내역으로 계산해요.</p>${bars(items)}</section>`;
+  },
+  loan: () => `
+    <section class="card"><div class="card-title">내 대출 한도 알아보기</div><p class="muted" style="margin-top:6px;font-size:15px">체험판에서는 실제 신용 조회나 대출 신청이 진행되지 않아요.</p>
+      <button class="btn btn-primary btn-md" style="margin-top:16px" data-act="demoInfo" data-title="대출 한도 조회" data-msg="체험판이라 실제 금융사에 조회하지 않아요. 신용점수에도 영향이 없어요.">한도 조회 체험하기</button></section>
+    <section class="card flush"><div class="card-title" style="padding:16px 20px 4px">상품 예시 <span class="tag">샘플</span></div>
+      ${[['비상금 대출', '연 5.9% ~ 15.0%', '최대 300만원'], ['직장인 신용대출', '연 4.8% ~ 12.5%', '최대 1억원'], ['전월세 보증금 대출', '연 3.9% ~ 5.2%', '최대 2억원']].map(([n, r, l]) => `<div class="list-row row-tap" data-act="demoInfo" data-title="${n}" data-msg="샘플 상품이에요. 실제 금리와 한도가 아니며 신청할 수 없어요." role="button" tabindex="0"><span class="ic-circle" style="background:#E5F8EF;color:#03B26C">${ICON.loan}</span><div class="lr-main"><div class="lr-title">${n}</div><div class="lr-sub">${r} · ${l}</div></div><span class="chev">${ICON.chevR}</span></div>`).join('')}</section>`,
+  credit: () => {
+    const score = 872, ang = Math.PI * (1 - score / 1000), x = 100 + 80 * Math.cos(ang), y = 100 - 80 * Math.sin(ang);
+    return `<section class="card"><div class="gauge-wrap"><svg viewBox="0 0 200 110" style="width:220px"><path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#F2F4F6" stroke-width="14" stroke-linecap="round"/><path d="M20 100 A80 80 0 0 1 ${x.toFixed(1)} ${y.toFixed(1)}" fill="none" stroke="#3182F6" stroke-width="14" stroke-linecap="round"/></svg>
+      <div class="score num">${score}점</div><div class="grade">샘플 점수 · 상위 18% 수준 예시</div></div></section>
+      <section class="card"><div class="card-title">점수를 올리는 습관</div><dl class="info-list" style="margin-top:6px">
+      <div class="info-row"><dt>연체 관리</dt><dd>소액이라도 연체하지 않기</dd></div><div class="info-row"><dt>카드 사용</dt><dd>한도의 30% 안에서 쓰기</dd></div><div class="info-row"><dt>꾸준함</dt><dd>오래된 계좌 유지하기</dd></div></dl>
+      <p class="muted small" style="margin-top:8px">실제 신용평가사와 연결되지 않은 예시 화면이에요.</p></section>`;
+  },
+  insurance: () => `
+    <section class="card flush"><div class="card-title" style="padding:16px 20px 4px">내 보험 <span class="tag">샘플</span></div>
+      ${[['실손 의료보험', '월 18,400원 · 보장 중'], ['운전자 보험', '월 9,900원 · 보장 중']].map(([n, s]) => `<div class="list-row row-tap" data-act="demoInfo" data-title="${n}" data-msg="샘플 보험 정보예요. 실제 보험사와 연결되지 않아요." role="button" tabindex="0"><span class="ic-circle" style="background:#E4F6F8;color:#14A3B8">${ICON.shield}</span><div class="lr-main"><div class="lr-title">${n}</div><div class="lr-sub">${s}</div></div><span class="chev">${ICON.chevR}</span></div>`).join('')}</section>
+    <div style="padding:4px 12px"><button class="btn btn-secondary" data-act="demoInfo" data-title="보험 진단" data-msg="체험판에서는 실제 보험 진단이나 가입이 진행되지 않아요.">보험 진단 체험하기</button></div>`,
+  invest: () => `
+    <section class="card"><div class="card-title">투자 둘러보기</div><p class="muted" style="font-size:15px;margin-top:6px">샘플 종목으로 시세 화면과 보유 현황을 체험할 수 있어요. 실제 주문은 할 수 없어요.</p>
+      <button class="btn btn-primary btn-md" style="margin-top:16px" data-act="tabStock">주식 탭으로 이동</button></section>`,
+  spend: () => {
+    const mt = monthTx(), demo = mt.reduce((s, t) => s + t.amount, 0);
+    const wk = [82000, 134500, 96000, 171200, 112000, 46600].map((v, i) => ({ v, l: `${i + 1}주` }));
+    const max = Math.max(...wk.map(w => w.v));
+    return `<section class="card"><div class="muted">${new Date().getMonth() + 1}월에 쓴 돈</div><div style="font-size:26px;font-weight:700" class="num">${won(SAMPLE_CARD_SPEND + demo)}</div>
+      <p class="muted small">카드 ${won(SAMPLE_CARD_SPEND)}(샘플) + 모의 송금 ${won(demo)}</p>
+      <div class="week-bars">${wk.map(w => `<div class="${w.v === max ? 'hi' : ''}"><span style="height:${(w.v / max) * 80}%"></span>${w.l}</div>`).join('')}</div></section>
+      <section class="card flush"><div class="card-title" style="padding:16px 20px 4px">이번 달 모의 송금</div>
+      ${mt.length ? mt.slice(0, 10).map(txRow).join('') : `<div class="empty-state" style="padding:24px"><b>이번 달 모의 송금이 없어요</b></div>`}</section>`;
+  },
+  recommend: () => `
+    ${[['저축 계좌로 자동 이체', '매달 월급날 10만원씩 모아보는 건 어때요?', 'coin', '#03B26C', '#E5F8EF'], ['고정 지출 점검', '구독 서비스가 많다면 한 번 정리해보세요', 'receipt', '#7B61FF', '#F0EDFF'], ['비상금 만들기', '생활비의 3개월치를 따로 두면 든든해요', 'shield', '#3182F6', '#E8F3FF']].map(([t, s, ic, c, bg]) => `
+      <section class="card tap" data-act="demoInfo" data-title="${t}" data-msg="체험용 추천 예시예요. 실제 금융 상품 가입으로 이어지지 않아요." role="button" tabindex="0"><div class="event-card"><span class="ic-circle" style="background:${bg};color:${c};width:48px;height:48px;border-radius:16px">${ICON[ic]}</span><div style="flex:1"><div class="t" style="font-size:16px">${t}</div><div class="s">${s}</div></div><span class="chev">${ICON.chevR}</span></div></section>`).join('')}
+    <p class="foot-note">추천 내용은 일반적인 예시이며 개인 맞춤 금융 조언이 아니에요.</p>`,
+  event: () => `
+    ${[['친구 초대 이벤트', '체험 포인트 500P', '#E5508E', '#FDEDF4'], ['가을맞이 출석 챌린지', '7일 연속 출석 시 100P', '#F08A24', '#FFF2E5'], ['첫 모의 송금 미션', '완료 시 50P', '#3182F6', '#E8F3FF']].map(([t, s, c, bg]) => `
+      <section class="card tap" data-act="demoInfo" data-title="${t}" data-msg="체험용 이벤트예요. 실제 경품이나 현금성 혜택은 지급되지 않아요." role="button" tabindex="0"><div class="event-card"><span class="event-art" style="background:${bg};color:${c};width:52px;height:52px;border-radius:16px">${ICON.ticket}</span><div style="flex:1"><div class="t" style="font-size:16px">${t}</div><div class="s">${s} · 체험</div></div><span class="chev">${ICON.chevR}</span></div></section>`).join('')}`,
+  point: () => {
+    const h = appState.settings.pointHistory;
+    return `<section class="card"><div class="muted">내 체험 포인트</div><div style="font-size:28px;font-weight:700" class="num">${comma(appState.settings.points)}P</div><p class="muted small">현금으로 바꿀 수 없는 체험용 포인트예요.</p>
+      <button class="btn btn-secondary btn-md" style="margin-top:14px" data-act="tabBenefit">포인트 모으러 가기</button></section>
+      <section class="card flush"><div class="card-title" style="padding:16px 20px 4px">적립 내역</div>
+      ${h.length ? h.map(p => `<div class="list-row"><span class="ic-circle" style="background:#FFF6DB;color:#E8A400">${ICON.point}</span><div class="lr-main"><div class="lr-title">${esc(p.reason)}</div><div class="lr-sub">${fmtDateTime(p.at)}</div></div><div class="lr-right"><div class="v" style="color:var(--primary)">+${p.n}P</div></div></div>`).join('') : `<div class="empty-state" style="padding:24px"><b>아직 적립 내역이 없어요</b>출석체크나 미션으로 모아보세요</div>`}</section>`;
+  },
+};
+
+/* ---------- 거래 행 ---------- */
+function txRow(t) {
+  return `<button class="tx-row row-tap" data-act="openTx" data-id="${esc(t.id)}">
+    <div class="tx-main"><div class="tx-title">${esc(t.recipientName)} · 모의 송금</div><div class="tx-time">${fmtTime(t.createdAt)} · ${esc(t.bankName)}</div></div>
+    <div class="tx-amt"><div class="a">-${won(t.amount)}</div><div class="b">잔액 ${won(t.balanceAfter)}</div></div>
+  </button>`;
+}
+function renderTransactionHistory(accountId) {
+  const list = appState.transactions.filter(t => t.accountId === accountId).sort((a, b) => b.createdAt - a.createdAt);
+  if (!list.length) return `<div class="empty-state" style="padding-top:48px"><div class="ei">${ICON.doc}</div><b>아직 거래내역이 없어요</b>모의 송금을 하면 여기에 바로 기록돼요</div>`;
+  const groups = [];
+  list.forEach(t => { const k = dateKey(t.createdAt); let g = groups[groups.length - 1]; if (!g || g.k !== k) groups.push((g = { k, ts: t.createdAt, items: [] })); g.items.push(t); });
+  return groups.map(g => `<div class="date-label">${fmtMonthDay(g.ts)}${dateKey() === g.k ? ' · 오늘' : ''}</div>${g.items.map(txRow).join('')}`).join('');
+}
+function watermarkUrl() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="140"><text x="10" y="80" transform="rotate(-20 110 70)" font-family="sans-serif" font-size="13" font-weight="700" fill="rgba(49,130,246,0.07)">모의 송금 · 실제 이체 아님</text></svg>`;
+  return `url('data:image/svg+xml,${encodeURIComponent(svg)}')`;
+}
+function openTxDetail(id) {
+  const t = appState.transactions.find(x => x.id === id);
+  if (!t) return toast('거래내역을 찾을 수 없어요');
+  const acc = getAccount(t.accountId);
+  openSheet({
+    title: `${esc(t.recipientName)}님께 모의 송금`,
+    sub: '<span class="tag blue">가상 데이터 · 실제 거래 아님</span>',
+    body: `<dl class="info-list" style="background-image:${watermarkUrl()};background-size:220px 140px">
+      <div class="info-row"><dt>모의 거래번호</dt><dd class="num" style="font-size:13px">${esc(t.id)}</dd></div>
+      <div class="info-row"><dt>가상 처리 일시</dt><dd class="num">${fmtDateTime(t.createdAt)}</dd></div>
+      <div class="info-row"><dt>받는 사람</dt><dd>${esc(t.recipientName)}<span class="tag">직접 입력</span></dd></div>
+      <div class="info-row"><dt>받는 은행</dt><dd>${esc(t.bankName)}</dd></div>
+      <div class="info-row"><dt>계좌번호</dt><dd class="num">${maskAccount(t.recipientAccount)}</dd></div>
+      <div class="info-row"><dt>송금 금액</dt><dd class="num">${won(t.amount)}</dd></div>
+      <div class="info-row"><dt>거래 구분</dt><dd>모의 송금</dd></div>
+      <div class="info-row"><dt>출금 계좌</dt><dd>${esc(acc ? acc.nickname : '-')}</dd></div>
+      <div class="info-row"><dt>처리 후 잔액</dt><dd class="num">${won(t.balanceAfter)}</dd></div>
+      <div class="info-row total"><dt>처리 상태</dt><dd>시뮬레이션 완료</dd></div>
+    </dl><p class="muted small" style="margin:8px 0 4px">실제 돈은 보내지지 않았어요. 받는 사람 이름은 직접 입력한 값이며 예금주 확인 결과가 아니에요.</p>`,
+    foot: `<button class="btn btn-primary" data-act="sheetClose">확인</button>`,
+  });
+}
+
+/* ---------- 스택 화면 정의 ---------- */
+const SCREENS = {
+  /* STEP 1~4 받는 사람 */
+  recipient: {
+    white: true, status: 'recipient',
+    render(e) {
+      const t = appState.transfer, bank = bankById(t.recipientBank), mode = e.params.mode || 'account';
+      const hasDraft = t.recipientBank || t.recipientAccount || t.recipientName;
+      return `${appbar({ right: hasDraft && mode === 'account' ? '<button class="text-btn" data-act="clearDraft">새로 입력</button>' : '' })}
+      <div class="screen-body">
+        <div class="page-head" style="padding-bottom:16px"><h1 class="h1">어디로 돈을 보낼까요?</h1></div>
+        <div class="seg" role="tablist">
+          <button class="seg-item ${mode === 'account' ? 'on' : ''}" role="tab" aria-selected="${mode === 'account'}" data-act="recipMode" data-mode="account">계좌</button>
+          <button class="seg-item ${mode === 'contact' ? 'on' : ''}" role="tab" aria-selected="${mode === 'contact'}" data-act="recipMode" data-mode="contact">연락처</button>
+        </div>
+        ${mode === 'account' ? `
+        <div class="form-card">
+          <button class="bank-field row-tap" data-act="openBank" aria-label="은행 선택">
+            ${bankIc(bank, 'sm')}
+            ${bank ? `<span class="bf-name">${esc(bank.name)}</span>` : '<span class="bf-ph">은행 선택</span>'}
+            <span class="chev">${ICON.chevD}</span>
+          </button>
+          <p class="field-msg" id="bankMsg" style="min-height:0"></p>
+          <div class="divider"></div>
+          <div class="acct-field">
+            <input id="acctInput" class="acct-input" type="text" inputmode="numeric" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" maxlength="40" placeholder="계좌번호를 입력해주세요" aria-label="계좌번호" value="${esc(t.recipientAccount)}">
+            <button class="clear-btn ${t.recipientAccount ? '' : 'hidden'}" data-act="clearAcct" aria-label="계좌번호 지우기">${ICON.close}</button>
+          </div>
+          <p class="field-msg" id="acctMsg"></p>
+          <div class="name-line">
+            <div class="name-status" id="nameStatus">${t.recipientName ? `받는 사람 <b>${esc(t.recipientName)}</b> <span class="tag">직접 입력</span>` : '<span class="muted">이름은 직접 입력해요</span>'}</div>
+            <button class="name-btn" data-act="openName" id="nameBtn">${ICON.edit}${t.recipientName ? '이름 수정' : '받는 사람 이름 입력'}</button>
+          </div>
+        </div>
+        <p class="hint">계좌번호와 이름은 실제 은행에 조회하거나 확인하지 않아요.</p>
+        ${recipientLists()}` : `
+        <div class="empty-state" style="padding-top:56px"><div class="ei">${ICON.people}</div><b>연락처 송금은 체험판에서 지원하지 않아요</b>개인정보 보호를 위해 연락처에 접근하지 않아요.<br>계좌번호로 모의 송금을 체험해보세요.
+          <div style="margin-top:20px"><button class="btn btn-secondary btn-sm" data-act="recipMode" data-mode="account">계좌로 보내기</button></div></div>`}
+        <div style="height:24px"></div>
+      </div>
+      ${mode === 'account' ? `<div class="bottom-cta"><button class="btn btn-primary" id="recipNext" data-act="recipientNext">다음</button></div>` : ''}`;
+    },
+    mount(e) {
+      const input = e.el.querySelector('#acctInput');
+      if (!input) return;
+      const clear = e.el.querySelector('[data-act=clearAcct]'), msg = e.el.querySelector('#acctMsg');
+      const handle = () => {
+        const { digits, hadInvalid, tooLong } = sanitizeAccount(input.value);
+        if (input.value !== digits) {
+          const pos = input.selectionStart - (input.value.length - digits.length);
+          input.value = digits;
+          try { input.setSelectionRange(Math.max(0, pos), Math.max(0, pos)); } catch (_) {}
+        }
+        setRecipientAccount(digits);
+        clear.classList.toggle('hidden', !digits);
+        msg.className = 'field-msg';
+        msg.textContent = hadInvalid ? '계좌번호는 숫자만 입력할 수 있어요' : tooLong ? `계좌번호는 최대 ${ACCT_MAX}자리까지 입력할 수 있어요` : '';
+        updateRecipientCTA(e);
+      };
+      input.addEventListener('input', handle);
+      input.addEventListener('blur', () => {
+        const d = appState.transfer.recipientAccount;
+        if (d && d.length < ACCT_MIN) { msg.className = 'field-msg'; msg.textContent = `계좌번호가 너무 짧아요 (${ACCT_MIN}~${ACCT_MAX}자리)`; }
+      });
+      input.addEventListener('keydown', ev => { if (ev.key === 'Enter') input.blur(); });
+      updateRecipientCTA(e);
+    },
+  },
+  /* STEP 5 금액 */
+  amount: {
+    white: true, status: 'amount',
+    render() {
+      const t = appState.transfer, bank = bankById(t.recipientBank), acc = getAccount(t.sourceAccountId);
+      const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '00', '0', 'del'];
+      return `${appbar()}
+      <div class="amt-top">
+        <div class="to-line">${bankIc(bank)}<div style="min-width:0;flex:1"><div class="to-name"><b>${esc(t.recipientName)}</b>님에게 <span class="tag">직접 입력</span></div><div class="to-sub">${esc(bank ? bank.name : '')} ${esc(t.recipientAccount)}</div></div></div>
+        <h1 class="h1">얼마를 보낼까요?</h1>
+      </div>
+      <div class="amt-display"><div class="amt-value zero" id="amtValue" aria-live="polite">0원</div><div class="amt-sub" id="amtSub"></div></div>
+      <button class="source-row row-tap" data-act="chooseSource">
+        ${bankIc(OWN_BANK, 'sm')}
+        <div class="s-main">출금 <b>${esc(acc ? acc.nickname : '')}</b> · 잔액 <span class="num">${acc ? won(acc.balance) : '-'}</span></div>
+        <span class="chev">${ICON.chevD}</span>
+      </button>
+      <div class="quick-row">
+        <button class="chip" data-act="quick" data-v="10000">+1만</button>
+        <button class="chip" data-act="quick" data-v="50000">+5만</button>
+        <button class="chip" data-act="quick" data-v="100000">+10만</button>
+        <button class="chip" data-act="quickAll">전액</button>
+        <button class="chip" data-act="amtClear">전체 삭제</button>
+      </div>
+      <div class="keypad" role="group" aria-label="금액 키패드">${keys.map(k => `<button class="key" data-act="key" data-k="${k}" aria-label="${k === 'del' ? '한 자리 지우기' : k}">${k === 'del' ? ICON.backspace : k}</button>`).join('')}</div>
+      <div class="bottom-cta" style="padding-top:8px"><button class="btn btn-primary" id="amtNext" data-act="amountNext">다음</button></div>`;
+    },
+    mount(e) { updateAmountUI(e, false); },
+  },
+  /* STEP 6 최종 확인 */
+  confirm: {
+    white: true, status: 'confirm',
+    render() {
+      const t = appState.transfer, bank = bankById(t.recipientBank), acc = getAccount(t.sourceAccountId);
+      const after = acc ? acc.balance - t.amount : 0;
+      return `${appbar()}
+      <div class="sim-banner">${ICON.info}모의 송금 · 실제 돈은 이동하지 않아요</div>
+      <div class="screen-body">
+        <div class="confirm-hero fade-up">
+          ${bankIc(bank)}
+          <h1><b>${esc(t.recipientName)}</b>님께<br><span class="amt num">${won(t.amount)}</span>을 보내는 모의 송금</h1>
+        </div>
+        <dl class="detail-box info-list">
+          <div class="info-row"><dt>받는 사람</dt><dd>${esc(t.recipientName)}<span class="tag">직접 입력</span></dd><button class="edit-link" data-act="editName">수정</button></div>
+          <div class="info-row"><dt>받는 은행</dt><dd>${esc(bank ? bank.name : '-')}</dd><button class="edit-link" data-act="editBank">수정</button></div>
+          <div class="info-row"><dt>받는 계좌</dt><dd class="num">${esc(t.recipientAccount)}</dd><button class="edit-link" data-act="editAccount">수정</button></div>
+          <div class="info-row"><dt>출금 계좌</dt><dd>내 ${esc(acc ? acc.nickname : '-')}</dd><button class="edit-link" data-act="chooseSource">변경</button></div>
+          <div class="info-row"><dt>보낼 금액</dt><dd class="num">${won(t.amount)}</dd><button class="edit-link" data-act="editAmount">수정</button></div>
+          <div class="info-row"><dt>모의 수수료</dt><dd class="num">0원</dd></div>
+          <div class="info-row total"><dt>모의 송금 후<br>잔액</dt><dd class="num" style="align-self:center">${won(after)}</dd></div>
+        </dl>
+        <div class="warn-box">${ICON.info}<span>받는 사람 이름은 직접 입력한 값이에요. 실제 예금주 조회나 계좌 존재 여부 확인은 하지 않아요.</span></div>
+      </div>
+      <div class="bottom-cta"><button class="btn btn-primary" data-act="confirmProceed" id="proceedBtn">모의 송금 진행하기</button></div>`;
+    },
+  },
+  /* STEP 8 처리 중 */
+  processing: {
+    white: true, noBack: true, status: 'processing',
+    onBackBlocked() { toast('모의 송금을 처리하는 중이에요. 잠시만 기다려주세요'); },
+    render(e) {
+      const t = appState.transfer;
+      return `<header class="appbar"><span class="spacer"></span><span class="demo-chip">체험용</span><span style="width:8px"></span></header>
+      <div class="proc-wrap">
+        <div class="loader" id="procLoader"><svg class="spin" viewBox="0 0 64 64"><circle cx="32" cy="32" r="26" class="track"/><circle cx="32" cy="32" r="26" class="arc"/></svg></div>
+        <div class="proc-title"><b>${esc(t.recipientName)}</b>님께 <span class="num">${won(t.amount)}</span></div>
+        <div class="proc-msg" id="procMsg">모의 송금 처리 중이에요</div>
+        <p class="proc-note">이 기기 안에서만 진행되는 시뮬레이션이에요</p>
+      </div>`;
+    },
+    onEnter(e) { runProcessingAnimation(e); },
+  },
+  /* STEP 9 완료 */
+  complete: {
+    white: true, noBack: true,
+    onBackBlocked() { leaveComplete('home'); },
+    render(e) {
+      const tx = appState.transactions.find(x => x.id === e.params.txId);
+      if (!tx) return `${appbar({ back: false, close: true })}<div class="screen-body"><div class="empty-state"><b>거래 정보를 찾을 수 없어요</b></div></div>`;
+      const acc = getAccount(tx.accountId), r = findRecipient(`${tx.bankId}:${tx.recipientAccount}`);
+      return `${appbar({ back: false, close: true })}
+      <div class="sim-banner">${ICON.info}체험 결과 · 실제 이체 아님</div>
+      <div class="screen-body complete-body" style="background-image:${watermarkUrl()}">
+        <div class="done-hero">
+          <div class="done-ic"><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="36" fill="#3182F6"/><path class="check-path" d="M22 37.5l9.5 9.5L51 27.5" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h1><b>${esc(tx.recipientName)}</b>님께<br><span class="num">${won(tx.amount)}</span> 모의 송금을 완료했어요</h1>
+          <div class="sim-strong">${ICON.info}체험 결과 · 실제 돈은 보내지지 않았어요</div>
+        </div>
+        <dl class="receipt info-list fade-up">
+          <div class="info-row"><dt>받는 사람</dt><dd>${esc(tx.recipientName)}<span class="tag">직접 입력</span></dd></div>
+          <div class="info-row"><dt>은행</dt><dd>${esc(tx.bankName)}</dd></div>
+          <div class="info-row"><dt>계좌번호</dt><dd class="num">${maskAccount(tx.recipientAccount)}</dd></div>
+          <div class="info-row"><dt>모의 송금 금액</dt><dd class="num">${won(tx.amount)}</dd></div>
+          <div class="info-row"><dt>출금 계좌</dt><dd>${esc(acc ? acc.nickname : '-')} · 잔액 ${won(tx.balanceAfter)}</dd></div>
+          <div class="info-row"><dt>처리 일시</dt><dd class="num">${fmtDateTime(tx.createdAt)}</dd></div>
+          <div class="info-row"><dt>가상 거래번호</dt><dd class="num" style="font-size:12.5px">${esc(tx.id)}</dd></div>
+          <div class="info-row total"><dt>처리 상태</dt><dd>시뮬레이션 완료</dd></div>
+        </dl>
+        ${r ? `<div class="fav-line"><button class="${r.favorite ? 'on' : ''}" data-act="toggleFav" data-key="${esc(r.key)}">${ICON.star}${r.favorite ? '즐겨찾기에 추가됨' : '즐겨찾기에 추가'}</button></div>` : ''}
+        <p class="foot-note" style="padding-top:8px">이 화면은 이체 증빙이나 영수증으로 사용할 수 없어요.</p>
+      </div>
+      <div class="bottom-cta"><div class="done-actions">
+        <div class="btn-row"><button class="btn btn-gray btn-md" data-act="doneAgain">다시 송금하기</button><button class="btn btn-secondary btn-md" data-act="doneHistory">모의 거래내역 보기</button></div>
+        <button class="btn btn-primary" data-act="doneHome">홈으로</button>
+      </div></div>`;
+    },
+  },
+  /* 계좌 상세 + 거래내역 */
+  account: {
+    render(e) {
+      const a = getAccount(e.params.id) || appState.accounts[0];
+      e.params.id = a.id;
+      return `${appbar({ title: esc(a.nickname) })}
+      <div class="screen-body">
+        <div class="acct-hero">
+          <div class="meta">${esc(a.bankName)} ${maskAccount(a.number)}<button data-act="copyAcct" data-id="${a.id}">복사</button><span class="tag blue">가상 계좌</span></div>
+          <div class="bal num">${won(a.balance)}</div>
+          <div class="btn-row"><button class="btn btn-gray btn-md" data-act="demoInfo" data-title="채우기" data-msg="체험판에서는 가상 잔액을 충전할 수 없어요. 앱 데이터 초기화로 처음 잔액으로 되돌릴 수 있어요.">채우기</button><button class="btn btn-primary btn-md" data-act="startTransfer" data-id="${a.id}">모의 송금</button></div>
+        </div>
+        <div class="hist">
+          <div class="hist-head">거래내역 <span class="tag blue">가상 데이터</span></div>
+          ${renderTransactionHistory(a.id)}
+        </div>
+      </div>`;
+    },
+  },
+  service: {
+    render(e) {
+      const s = SERVICES.find(x => x.key === e.params.key);
+      return `${appbar({ title: s ? s.label : '' })}<div class="screen-body" style="padding-top:4px">${SERVICE_PAGES[e.params.key] ? SERVICE_PAGES[e.params.key]() : ''}<div style="height:24px"></div></div>`;
+    },
+    onEnter(e) { if (e.params.key === 'analysis') flagMission('analysis'); },
+  },
+  notifications: {
+    render() {
+      const items = appState.transactions.slice(0, 20).map(t => ({ t: `${t.recipientName}님께 ${won(t.amount)} 모의 송금을 완료했어요`, s: `${fmtRelDay(t.createdAt)} ${fmtTime(t.createdAt)} · 체험 알림`, ic: 'send' }));
+      items.push({ t: '모아 체험판에 오신 걸 환영해요', s: '모든 금액과 거래는 가상 데이터예요', ic: 'info' });
+      return `${appbar({ title: '알림' })}<div class="screen-body"><section class="card flush" style="margin-top:4px">${items.map(i => `<div class="list-row"><span class="ic-circle" style="background:#E8F3FF;color:#3182F6">${ICON[i.ic]}</span><div class="lr-main"><div class="lr-title" style="white-space:normal;font-size:15px">${esc(i.t)}</div><div class="lr-sub">${esc(i.s)}</div></div></div>`).join('')}</section></div>`;
+    },
+  },
+};
+
+/* ---------- 받는 사람 화면 로직 ---------- */
+function updateRecipientCTA(e) {
+  const btn = e.el.querySelector('#recipNext');
+  if (btn) btn.classList.toggle('disabled', !validateTransfer('recipient').ok);
+}
+function openBankSelector(onSelect) {
+  const cur = appState.transfer.recipientBank;
+  return openSheet({
+    title: '은행을 선택해주세요', tall: true,
+    body: `<div class="sticky-top"><div class="search-box">${ICON.search}<input id="bankSearch" type="search" placeholder="은행 이름 검색 (예: 국민)" autocomplete="off" enterkeyhint="search" aria-label="은행 검색"><button class="clear-btn hidden" id="bankClear" aria-label="검색어 지우기">${ICON.close}</button></div></div>
+      <div class="bank-grid" id="bankGrid"></div><p class="empty-mini hidden" id="bankEmpty">검색 결과가 없어요</p>`,
+    foot: `<button class="btn btn-gray btn-md" data-act="sheetClose">취소</button>`,
+    onMount(sh, api) {
+      const inp = sh.querySelector('#bankSearch'), grid = sh.querySelector('#bankGrid'), empty = sh.querySelector('#bankEmpty'), clr = sh.querySelector('#bankClear');
+      const draw = () => {
+        const list = filterBanks(inp.value);
+        grid.innerHTML = list.map(b => `<button class="bank-tile tap ${b.id === cur ? 'on' : ''}" data-bank="${b.id}">${bankIc(b, 'lg')}<span>${esc(b.name)}</span></button>`).join('');
+        empty.classList.toggle('hidden', list.length > 0);
+        clr.classList.toggle('hidden', !inp.value);
+      };
+      draw();
+      inp.addEventListener('input', draw);
+      clr.addEventListener('click', () => { inp.value = ''; draw(); inp.focus(); });
+      grid.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-bank]');
+        if (!b || api.closed) return;
+        api.close('select');
+        selectBank(b.dataset.bank);
+        onSelect && onSelect(b.dataset.bank);
+      });
+    },
+  });
+}
+function openNameSheet(onSaved) {
+  const cur = appState.transfer.recipientName;
+  return openSheet({
+    title: '받는 사람 이름',
+    sub: '예금주 조회 결과가 아니라 직접 입력하는 이름이에요. 송금 과정의 모든 화면에 이 이름이 표시돼요.',
+    body: `<div class="input-box"><input id="nameInput" type="text" maxlength="${MAX_NAME + 10}" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="done" placeholder="예) 김민수" aria-label="받는 사람 이름" value="${esc(cur)}"><button class="clear-btn ${cur ? '' : 'hidden'}" id="nameClear" aria-label="이름 지우기">${ICON.close}</button></div>
+      <div class="input-meta"><span class="err" id="nameErr"></span><span id="nameCount">${cur.length}/${MAX_NAME}</span></div>`,
+    foot: `<div class="btn-row"><button class="btn btn-gray" data-act="sheetClose">취소</button><button class="btn btn-primary" id="nameSave">저장</button></div>`,
+    onMount(sh, api) {
+      const inp = sh.querySelector('#nameInput'), save = sh.querySelector('#nameSave'), err = sh.querySelector('#nameErr'), cnt = sh.querySelector('#nameCount'), clr = sh.querySelector('#nameClear');
+      const sync = () => {
+        if (inp.value.length > MAX_NAME) { inp.value = inp.value.slice(0, MAX_NAME); err.textContent = `이름은 최대 ${MAX_NAME}자까지 입력할 수 있어요`; }
+        else err.textContent = '';
+        cnt.textContent = `${inp.value.length}/${MAX_NAME}`;
+        save.classList.toggle('disabled', !normalizeName(inp.value));
+        clr.classList.toggle('hidden', !inp.value);
+      };
+      const doSave = () => {
+        const v = normalizeName(inp.value);
+        if (!v) { err.textContent = '받는 사람 이름을 입력해주세요'; inp.focus(); return; }
+        setRecipientName(v);
+        api.close('save');
+        onSaved && onSaved(v);
+      };
+      inp.addEventListener('input', sync);
+      inp.addEventListener('keydown', ev => { if (ev.key === 'Enter' && !ev.isComposing) { ev.preventDefault(); doSave(); } });
+      clr.addEventListener('click', () => { inp.value = ''; sync(); inp.focus(); });
+      save.addEventListener('click', doSave);
+      sync();
+      inp.focus({ preventScroll: true });
+    },
+  });
+}
+function openSourceSheet(onPick) {
+  const cur = appState.transfer.sourceAccountId;
+  return openSheet({
+    title: '어느 계좌에서 보낼까요?', flush: true,
+    body: appState.accounts.map(a => `<button class="list-row row-tap" data-src="${a.id}">${bankIc(OWN_BANK)}<div class="lr-main"><div class="lr-title">${esc(a.nickname)}</div><div class="lr-sub num">잔액 ${won(a.balance)}</div></div>${a.id === cur ? `<span style="color:var(--primary)">${ICON.check.replace('<svg', '<svg style="width:22px;height:22px"')}</span>` : ''}</button>`).join(''),
+    onMount(sh, api) {
+      sh.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-src]');
+        if (!b || api.closed) return;
+        appState.transfer.sourceAccountId = b.dataset.src;
+        saveAppState();
+        api.close('select');
+        onPick && onPick();
+      });
+    },
+  });
+}
+
+/* ---------- 금액 화면 로직 ---------- */
+function updateAmountUI(e, animate = true) {
+  const el = e.el, t = appState.transfer, acc = getAccount(t.sourceAccountId);
+  const val = el.querySelector('#amtValue'), sub = el.querySelector('#amtSub'), next = el.querySelector('#amtNext');
+  if (!val) return;
+  const over = acc && t.amount > acc.balance;
+  const txt = won(t.amount);
+  val.textContent = txt;
+  val.classList.toggle('zero', t.amount === 0);
+  val.classList.toggle('long', txt.length > 12);
+  const wasErr = val.classList.contains('err');
+  val.classList.toggle('err', !!over);
+  if (over) {
+    sub.className = 'amt-sub err';
+    sub.textContent = `잔액이 부족해요 · 최대 ${won(acc.balance)}까지 보낼 수 있어요`;
+    if (!wasErr) { val.classList.remove('shake'); void val.offsetWidth; val.classList.add('shake'); }
+  } else {
+    sub.className = 'amt-sub';
+    sub.textContent = t.amount ? koreanAmount(t.amount) : `잔액 ${acc ? won(acc.balance) : '-'}`;
+    if (animate) { val.classList.remove('bump'); void val.offsetWidth; val.classList.add('bump'); }
+  }
+  next.classList.toggle('disabled', !validateTransfer('amount').ok);
+}
+function pressKey(k, e) {
+  const cur = appState.transfer.amount;
+  let next = cur;
+  if (k === 'del') next = Math.floor(cur / 10);
+  else if (k === '00') { if (!cur) return; next = cur * 100; }
+  else { next = cur * 10 + Number(k); if (!cur && k === '0') return; }
+  if (next > MAX_AMOUNT) { toast('한 번에 입력할 수 있는 최대 금액이에요'); return; }
+  setTransferAmount(next);
+  updateAmountUI(e);
+}
+
+/* ---------- 송금 처리 ---------- */
+let processingActive = false;
+function startTransfer(accountId) {
+  const t = appState.transfer;
+  if (accountId && getAccount(accountId)) t.sourceAccountId = accountId;
+  if (t.status === 'completed') resetTransfer();
+  if (stack.some(s => s.name === 'recipient')) { popTo('recipient'); return; }
+  navigateTo('recipient');
+}
+function pickRecipient(key) {
+  const r = findRecipient(key);
+  if (!r || navLock) return;
+  const t = appState.transfer;
+  Object.assign(t, { recipientBank: r.bankId, recipientAccount: r.account, recipientName: r.name, recipientNameSource: 'manual', amount: 0, txId: null });
+  const top = stack[stack.length - 1];
+  if (top && top.name === 'recipient') { saveAppState(); navigateTo('amount'); return; }
+  // 탭에서 바로 고른 경우: 받는 사람 화면을 뒤에 깔고 금액 화면으로 이동 (뒤로 가면 입력값 유지)
+  if (!setTransferStatus('recipient')) return;
+  const rec = buildScreen('recipient');
+  rec.el.classList.add('under');
+  rec.el.inert = true;
+  $('#stack').appendChild(rec.el);
+  stack.push(rec);
+  navigateTo('amount', {}, { force: true });
+}
+function renderTransferConfirmation() { navigateTo('confirm'); }
+function openAuthSheet() {
+  const t = appState.transfer;
+  openSheet({
+    title: '모의 송금을 진행할까요?',
+    sub: `${esc(t.recipientName)}님께 ${won(t.amount)}<br>실제 돈은 이동하지 않아요.`,
+    body: `<div class="warn-box" style="margin:0">${ICON.lock}<span>체험용 확인이에요. 실제 금융 앱의 비밀번호나 생체인증은 요구하지 않아요.</span></div>`,
+    foot: `<div class="btn-row"><button class="btn btn-gray" data-act="sheetClose">취소</button><button class="btn btn-primary" id="authGo">계속하기</button></div>`,
+    onClose(reason) {
+      if (reason !== 'continue' && appState.transfer.status === 'authorizing') { setTransferStatus('confirm'); saveAppState(); }
+    },
+    onMount(sh, api) {
+      const go = sh.querySelector('#authGo');
+      go.addEventListener('click', () => {
+        if (go.disabled || api.closed) return;
+        go.disabled = true;
+        api.close('continue');
+        processDemoTransfer();
+      });
+    },
+  });
+}
+function processDemoTransfer() {
+  const t = appState.transfer;
+  if (t.status !== 'authorizing' || processingActive) return;
+  const v = validateTransfer('all');
+  if (!v.ok) { setTransferStatus('confirm'); saveAppState(); toast(v.message); return; }
+  processingActive = true;
+  if (!navigateTo('processing', { txId: t.txId }, { force: true })) { processingActive = false; setTransferStatus('confirm'); }
+}
+function runProcessingAnimation(e) {
+  const msg = e.el.querySelector('#procMsg'), loader = e.el.querySelector('#procLoader');
+  setTimeout(() => { msg.classList.add('fade'); setTimeout(() => { msg.textContent = '가상 잔액에 반영하고 있어요'; msg.classList.remove('fade'); }, 200); }, 750);
+  setTimeout(() => {
+    loader.innerHTML = '<svg class="done" viewBox="0 0 72 72"><circle cx="36" cy="36" r="36" fill="#3182F6"/><path class="check-path" d="M22 37.5l9.5 9.5L51 27.5" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    msg.classList.add('fade');
+    setTimeout(() => { msg.textContent = '모의 송금 처리가 끝났어요'; msg.classList.remove('fade'); }, 200);
+  }, 1500);
+  setTimeout(() => completeDemoTransfer(e.params.txId), 2050);
+}
+function completeDemoTransfer(txId) {
+  processingActive = false;
+  const t = appState.transfer;
+  // 이미 처리된 거래번호면 잔액을 다시 차감하지 않고 결과만 보여준다
+  if (appState.processedTxIds.includes(txId)) { navigateTo('complete', { txId }, { replaceAll: true, force: true }); return false; }
+  if (t.status !== 'processing' || t.txId !== txId) { console.warn('[모아] 처리 상태가 맞지 않아 무시합니다'); return false; }
+  const acc = getAccount(t.sourceAccountId), bank = bankById(t.recipientBank);
+  if (!acc || !bank || !Number.isSafeInteger(t.amount) || t.amount <= 0 || t.amount > acc.balance) {
+    setTransferStatus('confirm');
+    saveAppState();
+    stack.pop().el.remove();
+    const prev = stack[stack.length - 1];
+    if (prev) { prev.el.classList.remove('under'); prev.el.inert = false; paint(prev); }
+    syncCurrent();
+    toast('잔액이 부족해 모의 송금을 진행하지 못했어요');
+    return false;
+  }
+  const now = Date.now();
+  acc.balance -= t.amount;
+  const tx = {
+    id: txId, accountId: acc.id, type: 'demo_transfer', direction: 'out',
+    recipientName: t.recipientName, recipientNameSource: t.recipientNameSource,
+    bankId: bank.id, bankName: bank.name, recipientAccount: t.recipientAccount,
+    amount: t.amount, fee: 0, balanceAfter: acc.balance, createdAt: now, status: 'simulated',
+  };
+  appState.transactions.unshift(tx);
+  appState.processedTxIds.push(txId);
+  upsertRecipient(tx);
+  setTransferStatus('completed');
+  saveAppState(); // 잔액·거래내역·최근 수취인을 한 번에 저장
+  navigateTo('complete', { txId }, { replaceAll: true, force: true });
+  return true;
+}
+function leaveComplete(where) {
+  const txId = stack[stack.length - 1]?.params.txId;
+  const tx = appState.transactions.find(x => x.id === txId);
+  resetTransfer();
+  if (where === 'home') resetToTab('home');
+  else if (where === 'again') navigateTo('recipient', {}, { replaceAll: true, force: true });
+  else if (where === 'history') {
+    clearStack();
+    switchTab('home', { force: true });
+    navigateTo('account', { id: tx ? tx.accountId : 'acc_living' }, { force: true });
+  }
+}
+
+/* ---------- 액션 (이벤트 위임) ---------- */
+const ACTIONS = {
+  back: () => goBack(),
+  closeFlow: () => { const top = stack[stack.length - 1]; if (top && top.name === 'complete') leaveComplete('home'); else goBack(); },
+  tab: el => switchTab(el.dataset.tab),
+  tabStock: () => resetToTab('stock'),
+  tabBenefit: () => resetToTab('benefit'),
+  sheetClose: el => { const s = sheetOf(el); s && s.close('cancel'); },
+  startTransfer: el => startTransfer(el.dataset.id),
+  openAccount: el => navigateTo('account', { id: el.dataset.id || 'acc_living' }),
+  service: el => navigateTo('service', { key: el.dataset.key }),
+  analysis: () => navigateTo('service', { key: 'analysis' }),
+  notifications: () => navigateTo('notifications'),
+  demoInfo: el => infoSheet(esc(el.dataset.title || '체험 화면'), esc(el.dataset.msg || '체험판에서 제공하지 않는 기능이에요.')),
+  assetSheet: () => openSheet({
+    title: '총자산 구성', sub: '연결된 가상 계좌 잔액의 합이에요.', flush: true,
+    body: appState.accounts.map(a => `<div class="list-row">${bankIc(OWN_BANK)}<div class="lr-main"><div class="lr-title">${esc(a.nickname)}</div><div class="lr-sub">${esc(a.bankName)} ${maskAccount(a.number)}</div></div><div class="lr-right"><div class="v num">${won(a.balance)}</div></div></div>`).join('') + `<div class="list-row" style="min-height:52px"><div class="lr-main"><div class="lr-title">합계</div></div><div class="lr-right"><div class="v num" style="color:var(--primary-strong);font-size:17px">${won(totalAssets())}</div></div></div>`,
+    foot: `<button class="btn btn-primary" data-act="sheetClose">확인</button>`,
+  }),
+  profile: () => openSheet({
+    title: '내 정보', sub: '체험용 가상 프로필이에요. 이름, 연락처 등 개인정보를 수집하지 않아요.',
+    body: `<dl class="info-list"><div class="info-row"><dt>이름</dt><dd>체험 사용자</dd></div><div class="info-row"><dt>가상 계좌</dt><dd>${appState.accounts.length}개</dd></div><div class="info-row"><dt>모의 송금</dt><dd>${appState.transactions.length}건</dd></div><div class="info-row"><dt>저장 위치</dt><dd>이 기기 브라우저</dd></div></dl>`,
+    foot: `<button class="btn btn-primary" data-act="sheetClose">확인</button>`,
+  }),
+  settings: () => openSettings(),
+  support: () => infoSheet('고객지원 안내', '모아는 체험용 데모 앱이라 별도의 고객센터를 운영하지 않아요. 실제 금융 거래나 계좌 관련 문의는 이용 중인 금융기관에 직접 문의해주세요.'),
+  about: () => infoSheet('앱 정보', '모아 체험판 v1.0<br>모바일 금융 앱의 송금 경험을 체험하기 위한 시뮬레이터예요. 실제 은행 API나 결제망과 연결되지 않으며, 입력한 정보는 외부로 전송되지 않고 이 기기의 브라우저 저장소에만 보관돼요.'),
+  resetData: () => confirmSheet({ title: '앱 데이터를 초기화할까요?', sub: '가상 잔액, 모의 거래내역, 최근 수취인, 즐겨찾기, 포인트와 설정이 모두 처음 상태로 돌아가요.', ok: '초기화', danger: true, onOk: resetAppData }),
+  attend: () => {
+    const k = dateKey();
+    if (appState.settings.attendance.includes(k)) return toast('오늘은 이미 출석했어요');
+    appState.settings.attendance.push(k);
+    appState.settings.attendance = appState.settings.attendance.slice(-60);
+    addPoints(10, '출석체크');
+    if (stack.length) resetToTab('benefit'); else renderTab('benefit');
+    toast('출석 완료! 체험 포인트 10P를 받았어요');
+  },
+  claimMission: el => {
+    const m = MISSIONS.find(x => x.id === el.dataset.id), s = appState.settings;
+    if (!m || s.missionsClaimed.includes(m.id) || !m.done()) return;
+    s.missionsClaimed.push(m.id);
+    addPoints(m.reward, `미션 · ${m.title}`);
+    renderTab('benefit');
+    toast(`체험 포인트 ${m.reward}P를 받았어요`);
+  },
+  openStock: el => openStockSheet(el.dataset.id),
+  openTx: el => openTxDetail(el.dataset.id),
+  copyAcct: el => {
+    const a = getAccount(el.dataset.id);
+    const txt = a ? a.number : '';
+    const done = () => toast('가상 계좌번호를 복사했어요');
+    try { navigator.clipboard.writeText(txt).then(done, () => toast('복사할 수 없는 환경이에요')); } catch (_) { toast('복사할 수 없는 환경이에요'); }
+  },
+
+  /* 송금 흐름 */
+  recipMode: el => { const top = stack[stack.length - 1]; if (top && top.name === 'recipient') { top.params.mode = el.dataset.mode; paint(top, false); } },
+  clearDraft: () => {
+    const t = appState.transfer;
+    Object.assign(t, { recipientBank: null, recipientAccount: '', recipientName: '', amount: 0, txId: null });
+    saveAppState();
+    repaintTop('recipient');
+  },
+  openBank: () => openBankSelector(() => {
+    const top = stack[stack.length - 1];
+    if (!top) return;
+    paint(top);
+    const inp = top.el.querySelector('#acctInput');
+    if (inp && !appState.transfer.recipientAccount && window.matchMedia('(pointer:fine)').matches) inp.focus();
+  }),
+  clearAcct: () => {
+    const top = stack[stack.length - 1];
+    setRecipientAccount('');
+    const inp = top.el.querySelector('#acctInput');
+    inp.value = '';
+    top.el.querySelector('[data-act=clearAcct]').classList.add('hidden');
+    top.el.querySelector('#acctMsg').textContent = '';
+    updateRecipientCTA(top);
+    inp.focus();
+  },
+  openName: () => openNameSheet(() => { repaintTop('recipient'); toast('받는 사람 이름을 저장했어요'); }),
+  recipientNext: el => {
+    const top = stack[stack.length - 1];
+    const v = validateTransfer('recipient');
+    if (!v.ok) {
+      if (v.field === 'name') {
+        const b = top.el.querySelector('#nameBtn');
+        b.classList.remove('attn'); void b.offsetWidth; b.classList.add('attn');
+        toast(v.message);
+        setTimeout(() => openNameSheet(() => repaintTop('recipient')), 180);
+      } else if (v.field === 'bank') {
+        toast(v.message);
+        openBankSelector(() => repaintTop('recipient'));
+      } else {
+        const m = top.el.querySelector('#acctMsg');
+        m.className = 'field-msg';
+        m.textContent = v.message;
+        top.el.querySelector('#acctInput').focus();
+      }
+      return;
+    }
+    if (document.activeElement) document.activeElement.blur();
+    appState.transfer.txId = null;
+    navigateTo('amount');
+  },
+  pickRecipient: el => pickRecipient(el.dataset.key),
+  toggleFav: el => {
+    const r = findRecipient(el.dataset.key);
+    if (!r) return;
+    r.favorite = !r.favorite;
+    saveAppState();
+    toast(r.favorite ? '즐겨찾기에 추가했어요' : '즐겨찾기에서 삭제했어요');
+    if (stack.length) repaintTop(); else renderTab(appState.currentTab);
+  },
+  recipMore: el => {
+    const r = findRecipient(el.dataset.key);
+    if (!r) return;
+    openSheet({
+      title: esc(r.name), sub: `${esc(bankById(r.bankId).name)} ${maskAccount(r.account)}`, flush: true,
+      body: `<button class="opt-row row-tap" data-role="fav">${ICON.star}${r.favorite ? '즐겨찾기 해제' : '즐겨찾기 등록'}</button><button class="opt-row row-tap danger" data-role="del">${ICON.trash}최근 목록에서 삭제</button>`,
+      onMount(sh, api) {
+        sh.querySelector('[data-role=fav]').addEventListener('click', () => { api.close('ok'); ACTIONS.toggleFav(el); });
+        sh.querySelector('[data-role=del]').addEventListener('click', () => {
+          api.close('ok');
+          appState.recipients = appState.recipients.filter(x => x.key !== r.key);
+          saveAppState();
+          toast('최근 목록에서 삭제했어요');
+          if (stack.length) repaintTop(); else renderTab(appState.currentTab);
+        });
+      },
+    });
+  },
+  chooseSource: () => openSourceSheet(() => {
+    const top = stack[stack.length - 1];
+    if (top && top.name === 'amount') { paint(top); }
+    else if (top && top.name === 'confirm') paint(top);
+  }),
+  key: el => { const top = stack[stack.length - 1]; if (top && top.name === 'amount') pressKey(el.dataset.k, top); },
+  quick: el => {
+    const top = stack[stack.length - 1];
+    const next = appState.transfer.amount + Number(el.dataset.v);
+    if (next > MAX_AMOUNT) return toast('한 번에 입력할 수 있는 최대 금액이에요');
+    setTransferAmount(next); updateAmountUI(top);
+  },
+  quickAll: () => { const top = stack[stack.length - 1], acc = getAccount(appState.transfer.sourceAccountId); setTransferAmount(acc ? acc.balance : 0); updateAmountUI(top); },
+  amtClear: () => { const top = stack[stack.length - 1]; setTransferAmount(0); updateAmountUI(top, false); },
+  amountNext: () => {
+    const v = validateTransfer('all');
+    if (!v.ok) {
+      const top = stack[stack.length - 1], val = top.el.querySelector('#amtValue');
+      val.classList.remove('shake'); void val.offsetWidth; val.classList.add('shake');
+      toast(v.field === 'amount' && appState.transfer.amount === 0 ? '0원은 보낼 수 없어요' : v.message);
+      return;
+    }
+    renderTransferConfirmation();
+  },
+  editName: () => openNameSheet(() => { repaintTop('confirm'); toast('받는 사람 이름을 수정했어요'); }),
+  editBank: () => openBankSelector(() => { repaintTop('confirm'); toast('받는 은행을 변경했어요'); }),
+  editAccount: () => popTo('recipient'),
+  editAmount: () => popTo('amount'),
+  confirmProceed: () => {
+    const t = appState.transfer;
+    if (t.status !== 'confirm' || sheets.length || processingActive) return;
+    const v = validateTransfer('all');
+    if (!v.ok) { toast(v.message); return; }
+    if (!t.txId || appState.processedTxIds.includes(t.txId)) t.txId = genTxId();
+    if (!setTransferStatus('authorizing')) return;
+    saveAppState();
+    openAuthSheet();
+  },
+  doneHome: () => leaveComplete('home'),
+  doneAgain: () => leaveComplete('again'),
+  doneHistory: () => leaveComplete('history'),
+};
+function openSettings() {
+  const s = appState.settings;
+  const row = (k, label, desc) => `<button class="list-row row-tap" data-set="${k}" style="padding:12px 24px"><div class="lr-main"><div class="lr-title">${label}</div><div class="lr-sub" style="white-space:normal">${desc}</div></div><span class="toggle ${s[k] ? 'on' : ''}" role="switch" aria-checked="${!!s[k]}"></span></button>`;
+  openSheet({
+    title: '설정', flush: true,
+    body: `${row('hideBalance', '홈에서 잔액 숨기기', '홈 화면의 가상 잔액을 가려요')}${row('notifications', '체험 알림 받기', '앱 안에서만 표시되는 체험 알림이에요')}
+      <div class="divider" style="margin:8px 24px"></div>
+      <button class="opt-row row-tap danger" data-role="reset">${ICON.reset}앱 데이터 초기화</button>`,
+    foot: `<button class="btn btn-primary" data-act="sheetClose">닫기</button>`,
+    onMount(sh, api) {
+      sh.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-set]');
+        if (b) {
+          const k = b.dataset.set;
+          s[k] = !s[k];
+          saveAppState();
+          b.querySelector('.toggle').classList.toggle('on', s[k]);
+          b.querySelector('.toggle').setAttribute('aria-checked', s[k]);
+          renderTab(appState.currentTab);
+        }
+        if (ev.target.closest('[data-role=reset]')) { api.close('ok'); ACTIONS.resetData(); }
+      });
+    },
+  });
+}
+function openStockSheet(id) {
+  const st = stockById(id);
+  if (!st) return;
+  const up = st.chg >= 0;
+  let range = '1D';
+  const isWatch = () => appState.settings.watchlist.includes(id);
+  openSheet({
+    title: `${esc(st.name)} <span class="tag">샘플</span>`,
+    sub: `<span class="num" style="font-size:24px;font-weight:700;color:var(--text)">${won(st.price)}</span> <span class="${up ? 'up' : 'down'}" style="font-weight:600">${chgTxt(st.chg)}</span>`,
+    body: `<div class="chart-box" id="chartBox">${sparkSvg(st.id + range, up, { w: 320, h: 160, area: true, n: 48 })}</div>
+      <div class="chart-range">${['1D', '1W', '1M', '1Y'].map(r => `<button data-range="${r}" class="${r === range ? 'on' : ''}">${{ '1D': '1일', '1W': '1주', '1M': '1달', '1Y': '1년' }[r]}</button>`).join('')}</div>
+      <dl class="info-list" style="margin-top:12px"><div class="info-row"><dt>업종</dt><dd>${esc(st.sector)}</dd></div><div class="info-row"><dt>데이터</dt><dd>가상 샘플 시세</dd></div></dl>
+      <p class="muted small" style="margin:6px 0">체험판에서는 실제 주식을 사고팔 수 없어요.</p>`,
+    foot: `<div class="btn-row"><button class="btn btn-gray" id="watchBtn">${isWatch() ? '관심 해제' : '관심 종목 추가'}</button><button class="btn btn-primary disabled" id="orderBtn">주문하기</button></div>`,
+    onMount(sh) {
+      sh.querySelector('.chart-range').addEventListener('click', ev => {
+        const b = ev.target.closest('[data-range]');
+        if (!b) return;
+        range = b.dataset.range;
+        sh.querySelectorAll('[data-range]').forEach(x => x.classList.toggle('on', x === b));
+        sh.querySelector('#chartBox').innerHTML = sparkSvg(st.id + range, up, { w: 320, h: 160, area: true, n: 48 });
+      });
+      sh.querySelector('#orderBtn').addEventListener('click', () => toast('체험판에서는 주문할 수 없어요'));
+      const wb = sh.querySelector('#watchBtn');
+      wb.addEventListener('click', () => {
+        const w = appState.settings.watchlist;
+        appState.settings.watchlist = isWatch() ? w.filter(x => x !== id) : [...w, id];
+        saveAppState();
+        wb.textContent = isWatch() ? '관심 해제' : '관심 종목 추가';
+        renderTab('stock');
+        toast(isWatch() ? '관심 종목에 추가했어요' : '관심 종목에서 삭제했어요');
+      });
+    },
+  });
+}
+
+/* ---------- 전역 이벤트 ---------- */
+document.addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]');
+  if (!el || el.disabled) return;
+  const fn = ACTIONS[el.dataset.act];
+  if (fn) { ev.stopPropagation(); fn(el, ev); }
+});
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape') { goBack(); return; }
+  if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches('[role=button][data-act]')) { ev.preventDefault(); ev.target.click(); }
+  // PC에서 금액 화면 숫자 키 입력 지원
+  const top = stack[stack.length - 1];
+  if (top && top.name === 'amount' && !sheets.length && !ev.metaKey && !ev.ctrlKey) {
+    if (/^[0-9]$/.test(ev.key)) pressKey(ev.key, top);
+    else if (ev.key === 'Backspace') pressKey('del', top);
+    else if (ev.key === 'Enter' && ev.target === document.body) ACTIONS.amountNext();
+  }
+});
+document.addEventListener('touchstart', () => {}, { passive: true }); // iOS :active 활성화
+// iOS 키보드가 올라올 때 바텀시트가 가려지지 않도록 보정
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  const fit = () => {
+    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    $('#sheetLayer').style.setProperty('--kb', `${kb > 80 ? kb : 0}px`);
+  };
+  vv.addEventListener('resize', fit);
+  vv.addEventListener('scroll', fit);
+}
+window.addEventListener('storage', ev => { if (ev.key === STORAGE_KEY && !stack.length) { loadAppState(); renderTab(appState.currentTab); } });
+
+/* ---------- 시작 ---------- */
+function init() {
+  const status = loadAppState();
+  $('#tabs').innerHTML = TABS.map(t => `<div class="tab-view" id="tab-${t.id}"></div>`).join('');
+  renderNav();
+  switchTab('home', { force: true });
+  saveAppState();
+  if (status === 'corrupt') setTimeout(() => toast('저장된 데이터에 문제가 있어 처음 상태로 복구했어요', 3200), 300);
+}
+init();
+</script>
+</body>
+</html>
