@@ -1200,12 +1200,48 @@ const ACTIONS = {
   closeFlow: () => { const top = stack[stack.length - 1]; if (top && top.name === 'complete') leaveComplete(); else goBack(); },
   sheetClose: el => { const s = sheetOf(el); s && s.close('cancel'); },
   appMenu: () => openSheet({
-    title: '내 가상 계좌', sub: '모의 송금은 이 가상 잔액에서만 빠져나가요.', flush: true,
-    body: appState.accounts.map(a => `<div class="list-row">${bankIc(OWN_BANK)}<div class="lr-main"><div class="lr-title">${esc(a.nickname)}</div><div class="lr-sub">${esc(a.bankName)} ${maskAccount(a.number)}</div></div><div class="lr-right"><div class="v num">${won(a.balance)}</div></div></div>`).join('')
+    title: '내 가상 계좌', sub: '계좌를 누르면 가상 잔액을 수정할 수 있어요.', flush: true,
+    body: appState.accounts.map(a => `<button class="list-row row-tap" data-act="editBalance" data-id="${a.id}">${bankIc(OWN_BANK)}<div class="lr-main"><div class="lr-title">${esc(a.nickname)}</div><div class="lr-sub">${esc(a.bankName)} ${maskAccount(a.number)}</div></div><div class="lr-right"><div class="v num">${won(a.balance)}</div><div class="lr-sub" style="color:var(--primary)">수정</div></div></button>`).join('')
       + `<div class="divider" style="margin:8px 24px"></div>
       <button class="opt-row row-tap" data-act="about">${ICON.info}앱 정보</button>
       <button class="opt-row row-tap danger" data-act="resetData">${ICON.reset}앱 데이터 초기화</button>`,
   }),
+  editBalance: el => {
+    const acc = getAccount(el.dataset.id);
+    if (!acc) return;
+    ACTIONS.sheetClose(el);
+    openSheet({
+      title: `${esc(acc.nickname)} 잔액 수정`, sub: '가상 잔액이에요. 모의 송금은 이 금액 안에서만 할 수 있어요.',
+      body: `<div class="input-box"><input id="balInput" type="text" inputmode="numeric" autocomplete="off" enterkeyhint="done" aria-label="가상 잔액" value="${comma(acc.balance)}"><span style="font-size:22px;font-weight:600">원</span></div>
+        <div class="input-meta"><span class="err" id="balErr"></span><span id="balKo"></span></div>`,
+      foot: `<div class="btn-row"><button class="btn btn-gray" data-act="sheetClose">취소</button><button class="btn btn-primary" id="balSave">저장</button></div>`,
+      onMount(sh, api) {
+        const inp = sh.querySelector('#balInput'), err = sh.querySelector('#balErr'), ko = sh.querySelector('#balKo'), save = sh.querySelector('#balSave');
+        const read = () => Number(inp.value.replace(/\D/g, '') || 0);
+        const sync = () => {
+          let n = read();
+          err.textContent = n > MAX_AMOUNT ? `최대 ${won(MAX_AMOUNT)}까지 입력할 수 있어요` : '';
+          n = Math.min(n, MAX_AMOUNT);
+          inp.value = inp.value.replace(/\D/g, '') ? comma(n) : '';
+          ko.textContent = n ? koreanAmount(n) : '0원';
+        };
+        const doSave = () => {
+          if (api.closed) return;
+          acc.balance = Math.min(read(), MAX_AMOUNT);
+          saveAppState();
+          api.close('save');
+          repaintTop();
+          toast(`${acc.nickname} 잔액을 ${won(acc.balance)}으로 바꿨어요`);
+        };
+        inp.addEventListener('input', sync);
+        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); doSave(); } });
+        save.addEventListener('click', doSave);
+        sync();
+        inp.focus({ preventScroll: true });
+        inp.select();
+      },
+    });
+  },
   about: el => { ACTIONS.sheetClose(el); infoSheet('앱 정보', '모아 체험판<br>모바일 금융 앱의 송금 경험을 체험하기 위한 시뮬레이터예요. 실제 은행 API나 결제망과 연결되지 않으며, 입력한 정보는 외부로 전송되지 않고 이 기기의 브라우저 저장소에만 보관돼요.'); },
   resetData: el => { ACTIONS.sheetClose(el); confirmSheet({ title: '앱 데이터를 초기화할까요?', sub: '가상 잔액, 모의 거래내역, 최근 보낸 계좌, 즐겨찾기가 모두 처음 상태로 돌아가요.', ok: '초기화', danger: true, onOk: resetAppData }); },
   /* 송금 흐름 */
