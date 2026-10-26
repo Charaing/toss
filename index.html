@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="format-detection" content="telephone=no">
-<meta name="description" content="모아 송금">
-<title>모아 송금</title>
+<meta name="description" content="토스 송금">
+<title>토스 송금</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
@@ -319,6 +319,32 @@ svg{display:block}
 }
 @media (max-height:640px){.amt-top .h1{margin-top:10px;font-size:20px}.amt-display{min-height:72px}.amt-value{font-size:34px}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* Bank logos and motion */
+.bank-ic.bank-logo{background:transparent;overflow:hidden}
+.bank-logo img{display:block;width:100%;height:100%;object-fit:contain;border-radius:50%}
+.amount-character{display:inline-block;white-space:pre;vertical-align:baseline;will-change:transform,opacity}
+.amount-character.changed{animation:amountDigitIn .28s var(--ease) var(--digit-delay,0ms) both}
+.sheet{transform:translate3d(0,calc(100% + 36px),0);transition:transform .42s cubic-bezier(.22,1,.36,1),bottom .2s;will-change:transform}
+.sheet-wrap.open .sheet{transform:translate3d(0,0,0)}
+.sheet-dim{transition:opacity .32s ease}
+.screen.offright{transform:translate3d(100%,0,0)}
+.screen{transition:transform .34s cubic-bezier(.22,1,.36,1),opacity .28s ease}
+.proc-wrap{padding:0 24px 80px}
+.wave-dots{display:flex;align-items:center;justify-content:center;gap:11px;height:60px;margin:0 0 25px}
+.wave-dots span{display:block;width:15px;height:15px;background:#3182F6;border-radius:50%;animation:dotWave 1.05s ease-in-out infinite;will-change:transform}
+.wave-dots span:nth-child(2){animation-delay:.14s}
+.wave-dots span:nth-child(3){animation-delay:.28s}
+.complete-body{display:flex;align-items:center;justify-content:center;padding-bottom:48px}
+.done-hero{width:100%;padding:24px;animation:completeAppear .48s cubic-bezier(.22,1,.36,1) both}
+.done-hero h1{font-size:28px;line-height:1.5;font-weight:700;letter-spacing:-.035em}
+.done-hero h1 b{font-weight:800}
+@keyframes amountDigitIn{from{transform:translateY(13px);opacity:.15;filter:blur(1px)}to{transform:translateY(0);opacity:1;filter:blur(0)}}
+@keyframes dotWave{0%,60%,100%{transform:translateY(7px)}30%{transform:translateY(-11px)}}
+@keyframes completeAppear{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:360px){.done-hero h1{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.wave-dots span{animation:none;opacity:.7}.amount-character.changed,.done-hero{animation:none}.sheet,.screen,.sheet-dim{transition-duration:.01ms}}
+
 </style>
 </head>
 <body>
@@ -331,7 +357,7 @@ svg{display:block}
 <script>
 'use strict';
 /* =========================================================
- * 모아 (MOA) — 모바일 앱
+ * 토스 (TOSS) — 모바일 앱
  * 실제 은행/금융 서비스와 연결되지 않으며, 모든 데이터는 이 기기의 LocalStorage에만 저장됩니다.
  * 네트워크 요청을 보내는 코드는 없습니다(글꼴 CSS 제외).
  * ========================================================= */
@@ -420,7 +446,7 @@ const ICON = {
   swap: sv('<path d="M4.5 8.5h14l-3.5-3.5M19.5 15.5h-14l3.5 3.5"/>'),
   doc: sv('<path d="M6 3.5h8l4 4v13H6z"/><path d="M14 3.5v4h4M9 12.5h6M9 16h6"/>'),
 };
-const LOGO = '<svg class="logo" viewBox="0 0 26 26"><rect width="26" height="26" rx="8" fill="#3182F6"/><path d="M7 17.5V9.6l6 5 6-5v7.9" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const LOGO = '<img class="logo" src="https://static.toss.im/icons/png/4x/icn-bank-toss.png" alt="토스">';
 
 /* ---------- 금융기관 목록 (독자 색상 아이콘) ---------- */
 const BANKS = [
@@ -447,11 +473,130 @@ const BANKS = [
   { id: 'savings', name: '저축은행', short: '저축', color: '#6B7684', alias: ['저축'] },
   { id: 'etc', name: '기타 금융기관', short: '기타', color: '#8B95A1', alias: ['기타', '증권', '금융'] },
 ];
-const OWN_BANK = { id: 'moa', name: '모아은행', short: 'M', color: '#3182F6' };
+const OWN_BANK = { id: 'moa', name: '토스뱅크', short: 'T', color: '#3182F6' };
 const bankById = id => BANKS.find(b => b.id === id) || (id === 'moa' ? OWN_BANK : null);
+const BANK_ICON_SOURCES = {
+  "kb": [
+    "004",
+    "kb",
+    "kbstar.com"
+  ],
+  "shinhan": [
+    "088",
+    "shinhan",
+    "shinhan.com"
+  ],
+  "hana": [
+    "081",
+    "hana",
+    "kebhana.com"
+  ],
+  "woori": [
+    "020",
+    "woori",
+    "wooribank.com"
+  ],
+  "nh": [
+    "011",
+    "nonghyup",
+    "banking.nonghyup.com"
+  ],
+  "ibk": [
+    "003",
+    "ibk",
+    "ibk.co.kr"
+  ],
+  "kakao": [
+    "090",
+    "kakaobank",
+    "kakaobank.com"
+  ],
+  "tossbank": [
+    "092",
+    "toss",
+    "tossbank.com"
+  ],
+  "kbank": [
+    "089",
+    "kbank",
+    "kbanknow.com"
+  ],
+  "sc": [
+    "023",
+    "sc",
+    "standardchartered.co.kr"
+  ],
+  "busan": [
+    "032",
+    "busan",
+    "busanbank.co.kr"
+  ],
+  "im": [
+    "031",
+    "daegu",
+    "imbank.co.kr"
+  ],
+  "kyongnam": [
+    "039",
+    "kyongnam",
+    "knbank.co.kr"
+  ],
+  "gwangju": [
+    "034",
+    "kwangju",
+    "kjbank.com"
+  ],
+  "jeonbuk": [
+    "037",
+    "jeonbuk",
+    "jbbank.co.kr"
+  ],
+  "jeju": [
+    "035",
+    "jeju",
+    "e-jejubank.com"
+  ],
+  "suhyup": [
+    "007",
+    "suhyup",
+    "suhyup-bank.com"
+  ],
+  "post": [
+    "071",
+    "post",
+    "epostbank.go.kr"
+  ],
+  "mg": [
+    "045",
+    "saemaeul",
+    "kfcc.co.kr"
+  ],
+  "cu": [
+    "048",
+    "shinhyup",
+    "cu.co.kr"
+  ],
+  "savings": [
+    "050",
+    "savingsbank",
+    "fsb.or.kr"
+  ],
+  "moa": [
+    "092",
+    "toss",
+    "tossbank.com"
+  ]
+};
 function bankIc(b, size = '') {
-  if (!b) return `<span class="bank-ic empty ${size}">${ICON.bank}</span>`;
-  return `<span class="bank-ic ${size}" style="background:${b.color};color:${b.fg || '#fff'}" aria-hidden="true">${esc(b.short)}</span>`;
+  if (!b || b.id === 'etc') return `<span class="bank-ic empty ${size}">${ICON.bank}</span>`;
+  const icon = BANK_ICON_SOURCES[b.id];
+  if (!icon) return `<span class="bank-ic empty ${size}">${ICON.bank}</span>`;
+  const urls = [
+    `https://static.toss.im/png-icons/securities/icn-sec-fill-${icon[0]}.png`,
+    `https://static.toss.im/icons/png/4x/icn-bank-${icon[1]}.png`,
+    `https://www.google.com/s2/favicons?domain=${icon[2]}&sz=128`
+  ];
+  return `<span class="bank-ic bank-logo ${size}"><img src="${urls[0]}" data-fallbacks="${esc(JSON.stringify(urls.slice(1)))}" alt="${esc(b.name)}" decoding="async" referrerpolicy="no-referrer" onerror="const u=JSON.parse(this.dataset.fallbacks||'[]');if(u.length){this.dataset.fallbacks=JSON.stringify(u.slice(1));this.src=u[0]}else{this.onerror=null;this.hidden=true;this.parentElement.classList.add('empty');this.parentElement.insertAdjacentHTML('beforeend', '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.7&quot;&gt;&lt;path d=&quot;M3 9l9-6 9 6M5 10v9m5-9v9m4-9v9m5-9v9M3 21h18&quot;/&gt;&lt;/svg&gt;')}" /></span>`;
 }
 const normQ = s => String(s || '').toLowerCase().replace(/\s+/g, '');
 function filterBanks(q) {
@@ -537,7 +682,7 @@ function loadAppState() {
     Object.assign(appState, sanitizeLoaded(JSON.parse(raw)));
     return 'ok';
   } catch (e) {
-    console.warn('[모아] 저장 데이터 손상, 초기화합니다:', e.message);
+    console.warn('[토스] 저장 데이터 손상, 초기화합니다:', e.message);
     Object.assign(appState, defaultState());
     try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
     return 'corrupt';
@@ -561,7 +706,7 @@ function setTransferStatus(next) {
   const t = appState.transfer;
   if (t.status === next) return true;
   if (!(TRANSITIONS[t.status] || []).includes(next)) {
-    console.warn(`[모아] 허용되지 않은 송금 상태 전환: ${t.status} → ${next}`);
+    console.warn(`[토스] 허용되지 않은 송금 상태 전환: ${t.status} → ${next}`);
     return false;
   }
   t.status = next;
@@ -659,7 +804,7 @@ function openSheet({ title = '', sub = '', body = '', foot = '', tall = false, f
       wrap.style.pointerEvents = 'none';
       const i = sheets.indexOf(api);
       if (i >= 0) sheets.splice(i, 1);
-      setTimeout(() => wrap.remove(), 300);
+      setTimeout(() => wrap.remove(), 430);
       if (document.activeElement && wrap.contains(document.activeElement)) document.activeElement.blur();
       onClose && onClose(reason);
     },
@@ -667,7 +812,9 @@ function openSheet({ title = '', sub = '', body = '', foot = '', tall = false, f
   wrap.querySelector('.sheet-dim').addEventListener('click', () => { if (api.dismissible) api.close('dim'); });
   sheets.push(api);
   wrap.getBoundingClientRect();
-  wrap.classList.add('open');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { if (!api.closed) wrap.classList.add('open'); });
+  });
   onMount && onMount(wrap.querySelector('.sheet'), api);
   return api;
 }
@@ -686,9 +833,9 @@ function confirmSheet({ title, sub, ok = '확인', cancel = '취소', danger = f
 /* ---------- 화면 스택 내비게이션 ---------- */
 const stack = [];
 let navLock = false;
-const ANIM = 240;
+const ANIM = 340;
 function lockNav(ms = ANIM + 30) { navLock = true; clearTimeout(lockNav.t); lockNav.t = setTimeout(() => (navLock = false), ms); }
-function appbar({ title = '', back = true, close = false, right = '' } = {}) {
+function appbar({ title = '토스', back = true, close = false, right = '' } = {}) {
   return `<header class="appbar">
     ${back ? `<button class="icon-btn" data-act="back" aria-label="뒤로 가기">${ICON.back}</button>` : close ? `<button class="icon-btn" data-act="closeFlow" aria-label="닫기">${ICON.close}</button>` : '<span style="width:12px"></span>'}
     <div class="title">${title}</div>${right}<span style="width:8px"></span>
@@ -896,28 +1043,15 @@ const SCREENS = {
   processing: {
     white: true, noBack: true, status: 'processing',
     onBackBlocked() { toast('송금을 처리하는 중이에요. 잠시만 기다려주세요'); },
-    render(e) {
-      const t = appState.transfer, bank = bankById(t.recipientBank), acc = getAccount(t.sourceAccountId);
-      const arc = 'M50 100 Q150 4 250 100';
-      return `<header class="appbar"><span class="spacer"></span><span style="width:8px"></span></header>
+    render() {
+      const t = appState.transfer;
+      return `<div class="appbar" aria-hidden="true"></div>
       <div class="proc-wrap">
-        <div class="send-stage" id="sendStage">
-          <svg class="send-svg" viewBox="0 0 300 150" aria-hidden="true">
-            <path id="sendArc" d="${arc}" class="send-track"/>
-            <path d="${arc}" class="send-progress" pathLength="1"/>
-            <g id="sendPlane" class="send-plane">
-              <circle r="15" fill="#3182F6"/>
-              <path d="M-6.5 -6.5 8.5 0-6.5 6.5-3.5 0z" fill="#fff"/>
-              <animateMotion id="sendMotion" dur="1.35s" begin="indefinite" fill="freeze" rotate="auto" calcMode="spline" keyTimes="0;1" keyPoints="0;1" keySplines=".45 0 .2 1"><mpath href="#sendArc"/></animateMotion>
-            </g>
-          </svg>
-          <div class="send-node from">${bankIc(OWN_BANK, 'lg')}<span>${esc(acc ? acc.nickname : '내 계좌')}</span></div>
-          <div class="send-node to" id="sendTo"><span class="to-ic">${bankIc(bank, 'lg')}</span><span>${esc(t.recipientName)}</span></div>
+        <div class="wave-dots" role="status" aria-label="송금 처리 중">
+          <span></span><span></span><span></span>
         </div>
-        <div class="send-amount num" id="sendAmount">0원</div>
-        <div class="proc-title" id="procTitle"><b>${esc(t.recipientName)}</b>님께 보내는 중</div>
-        <div class="proc-msg" id="procMsg">송금 처리 중이에요</div>
-        
+        <div class="proc-title"><b>${esc(t.recipientName)}</b>님에게</div>
+        <div class="proc-msg"><span class="num">${won(t.amount)}</span> 보내는 중이에요</div>
       </div>`;
     },
     onEnter(e) { runProcessingAnimation(e); },
@@ -929,27 +1063,11 @@ const SCREENS = {
     render(e) {
       const tx = appState.transactions.find(x => x.id === e.params.txId);
       if (!tx) return `${appbar({ back: false, close: true })}<div class="screen-body"><div class="empty-state"><b>거래 정보를 찾을 수 없어요</b></div></div>`;
-      const acc = getAccount(tx.accountId), r = findRecipient(`${tx.bankId}:${tx.recipientAccount}`);
-      return `${appbar({ back: false, close: true })}
-      
+      return `<div class="appbar" aria-hidden="true"></div>
       <div class="screen-body complete-body">
         <div class="done-hero">
-          <div class="done-ic"><svg viewBox="0 0 72 72"><circle cx="36" cy="36" r="36" fill="#3182F6"/><path class="check-path" d="M22 37.5l9.5 9.5L51 27.5" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-          <h1><b>${esc(tx.recipientName)}</b>님께<br><span class="num">${won(tx.amount)}</span> 송금을 완료했어요</h1>
-          
+          <h1><b>${esc(tx.recipientName)}</b>님에게<br><span class="num">${won(tx.amount)}</span><br>송금을 완료했어요</h1>
         </div>
-        <dl class="receipt info-list fade-up">
-          <div class="info-row"><dt>받는 사람</dt><dd>${esc(tx.recipientName)}<span class="tag">직접 입력</span></dd></div>
-          <div class="info-row"><dt>은행</dt><dd>${esc(tx.bankName)}</dd></div>
-          <div class="info-row"><dt>계좌번호</dt><dd class="num">${maskAccount(tx.recipientAccount)}</dd></div>
-          <div class="info-row"><dt>송금 금액</dt><dd class="num">${won(tx.amount)}</dd></div>
-          <div class="info-row"><dt>출금 계좌</dt><dd>${esc(acc ? acc.nickname : '-')} · 잔액 ${won(tx.balanceAfter)}</dd></div>
-          <div class="info-row"><dt>처리 일시</dt><dd class="num">${fmtDateTime(tx.createdAt)}</dd></div>
-          <div class="info-row"><dt>거래번호</dt><dd class="num" style="font-size:12.5px">${esc(tx.id)}</dd></div>
-          <div class="info-row total"><dt>처리 상태</dt><dd>완료</dd></div>
-        </dl>
-        ${r ? `<div class="fav-line"><button class="${r.favorite ? 'on' : ''}" data-act="toggleFav" data-key="${esc(r.key)}">${ICON.star}${r.favorite ? '즐겨찾기에 추가됨' : '즐겨찾기에 추가'}</button></div>` : ''}
-        
       </div>
       <div class="bottom-cta"><button class="btn btn-primary" data-act="done">확인</button></div>`;
     },
@@ -1047,7 +1165,13 @@ function updateAmountUI(e, animate = true) {
   if (!val) return;
   const over = acc && t.amount > acc.balance;
   const txt = won(t.amount);
-  val.textContent = txt;
+  const previous = val.dataset.amountText || val.textContent;
+  val.dataset.amountText = txt;
+  val.innerHTML = Array.from(txt).map((char, i) => {
+    const oldChar = previous[previous.length - (txt.length - i)];
+    const changed = animate && char !== oldChar;
+    return `<span class="amount-character${changed ? ' changed' : ''}" style="--digit-delay:${Math.min(i * 12, 84)}ms">${esc(char)}</span>`;
+  }).join('');
   val.classList.toggle('zero', t.amount === 0);
   val.classList.toggle('long', txt.length > 12);
   const wasErr = val.classList.contains('err');
@@ -1059,7 +1183,7 @@ function updateAmountUI(e, animate = true) {
   } else {
     sub.className = 'amt-sub';
     sub.textContent = t.amount ? koreanAmount(t.amount) : `잔액 ${acc ? won(acc.balance) : '-'}`;
-    if (animate) { val.classList.remove('bump'); void val.offsetWidth; val.classList.add('bump'); }
+
   }
   next.classList.toggle('disabled', !validateTransfer('amount').ok);
 }
@@ -1126,35 +1250,16 @@ function processDemoTransfer() {
   if (!navigateTo('processing', { txId: t.txId }, { force: true })) { processingActive = false; setTransferStatus('confirm'); setTransferStatus('amount'); }
 }
 function runProcessingAnimation(e) {
-  const el = e.el, amount = appState.transfer.amount, name = appState.transfer.recipientName;
-  const stage = el.querySelector('#sendStage'), amt = el.querySelector('#sendAmount');
-  const swapText = (sel, html) => { const n = el.querySelector(sel); n.classList.add('fade'); setTimeout(() => { n.innerHTML = html; n.classList.remove('fade'); }, 180); };
   setTimeout(() => {
-    stage.classList.add('go');
-    try { el.querySelector('#sendMotion').beginElement(); } catch (_) {}
-    const t0 = performance.now(), dur = 1300;
-    const tick = now => {
-      const p = Math.min(1, (now - t0) / dur), eased = 1 - Math.pow(1 - p, 3);
-      amt.textContent = won(Math.round(amount * eased));
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, 250);
-  setTimeout(() => swapText('#procMsg', '잔액에 반영하고 있어요'), 900);
-  setTimeout(() => {
-    stage.classList.add('arrived');
-    el.querySelector('#sendTo .to-ic').innerHTML = '<svg class="arrive-check" viewBox="0 0 44 44"><circle cx="22" cy="22" r="22" fill="#3182F6"/><path class="check-path" d="M13 22.8l6 6L31.5 16.5" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    swapText('#procTitle', `<b>${esc(name)}</b>님께 보냈어요`);
-    swapText('#procMsg', '송금 처리가 끝났어요');
-  }, 1650);
-  setTimeout(() => completeDemoTransfer(e.params.txId), 2450);
+    if (e.el.isConnected && appState.transfer.status === 'processing') completeDemoTransfer(e.params.txId);
+  }, 1900);
 }
 function completeDemoTransfer(txId) {
   processingActive = false;
   const t = appState.transfer;
   // 이미 처리된 거래번호면 잔액을 다시 차감하지 않고 결과만 보여준다
   if (appState.processedTxIds.includes(txId)) { navigateTo('complete', { txId }, { replaceAll: true, force: true }); return false; }
-  if (t.status !== 'processing' || t.txId !== txId) { console.warn('[모아] 처리 상태가 맞지 않아 무시합니다'); return false; }
+  if (t.status !== 'processing' || t.txId !== txId) { console.warn('[토스] 처리 상태가 맞지 않아 무시합니다'); return false; }
   const acc = getAccount(t.sourceAccountId), bank = bankById(t.recipientBank);
   if (!acc || !bank || !Number.isSafeInteger(t.amount) || t.amount <= 0 || t.amount > acc.balance) {
     setTransferStatus('confirm');
@@ -1236,7 +1341,7 @@ const ACTIONS = {
       },
     });
   },
-  about: el => { ACTIONS.sheetClose(el); infoSheet('앱 정보', '모아<br>입력한 정보와 거래내역은 이 기기의 브라우저에 저장돼요.'); },
+  about: el => { ACTIONS.sheetClose(el); infoSheet('앱 정보', '토스<br>입력한 정보와 거래내역은 이 기기의 브라우저에 저장돼요.'); },
   resetData: el => { ACTIONS.sheetClose(el); confirmSheet({ title: '앱 데이터를 초기화할까요?', sub: '잔액, 거래내역, 최근 보낸 계좌, 즐겨찾기가 모두 처음 상태로 돌아가요.', ok: '초기화', danger: true, onOk: resetAppData }); },
   /* 송금 흐름 */
   recipMode: el => { const top = stack[stack.length - 1]; if (top && top.name === 'recipient') { top.params.mode = el.dataset.mode; paint(top, false); } },
